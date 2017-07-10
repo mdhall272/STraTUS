@@ -14,7 +14,7 @@ The following optional arguments are currently mutually exclusive. At present th
 
 The remaining optional arguments are:
 
-* -s The number of samples to take.
+* -s The number of samples to take. The default is 1.
 * -d Use [ggtree](https://bioconductor.org/packages/release/bioc/html/ggtree.html) to draw each sample as an annotated tree in PDF format.
 * -h Print the help message.
 
