@@ -8,7 +8,7 @@ The script takes two compulsory arguments. The first should be the input tree in
 The following optional arguments are currently mutually exclusive. At present the script cannot handle all these variations at once, but this will be implemented eventually.
 
 * -i Sample only transmission trees where hosts cease to be infected (and hence infectious) at sampling. 
-* -I Used to specify a CSV file of minimum and maximum **heights** (not dates) for each host's infection. At present these need to be given in units of branch lengths before the date of the last tip.
+* -I Used to specify a CSV file of minimum and maximum **heights** (not dates) for each host's infection. Assuming branch lengths are in calendar time, these should be given in backwards time with the zero point being the time of the youngest tip in the tree.
 * -m Used to specify a CSV file that maps each tip to an identifier for the relevant host. This is for multiple sampling, and is unnecessary if only one or zero tips are present from any single host.
 * -u Used to specify a number of unsampled hosts which had descendants within the sample.
 
