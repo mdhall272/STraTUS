@@ -11,7 +11,7 @@ arg_parser$add_argument("-m", "--multipleSamplingFile", action="store", help="Th
 arg_parser$add_argument("-u", "--unsampledHostCount", action="store", default=0, help="The number of unsampled hosts. Default is 0. An unsampled count of greater than 1 is currently incompatible with time limits for infectiousness. Cannot be used simultaneously with time limits on infections or multiple samples per host.")
 arg_parser$add_argument("-s", "--sampleCount", action="store", default=1, help="How many transmission trees to sample. Default is 1.")
 arg_parser$add_argument("-d", "--drawOutput", action="store_true", help="If present, draw every sample as an annotated tree PDF. Requires ggtree.")
-arg_parser$add_argument("treeFileName", action="store", help="Tree file name. Alternatively, a base name that identifies a group of tree file names. Tree files are assumed to end in '.tree'. This must be the 'processed' tree produced by SplitTreesToSubtrees.R.")
+arg_parser$add_argument("treeFileName", action="store", help="File name for the input tree in Newick format.")
 arg_parser$add_argument("outputString", action="store", help="A string identifying output files")
 
 args <- arg_parser$parse_args()
