@@ -5,7 +5,7 @@ It is primarily intended for those interested in exploring the structure of tran
 
 The script takes two compulsory arguments. The first should be the input tree in Newick format; it should be binary and since no manipulation is performed by the script, should be exactly the tree of interest. The second is simply a string identifying output files.
 
-The following optional arguments are currently mutually exclusive. At present the script cannot handle all these variations at once, but this will be implemented eventually.
+It should be run from the command line with Rscript. The following optional arguments are currently mutually exclusive. At present the script cannot handle all these variations at once, but this will be implemented eventually.
 
 * -i Sample only transmission trees where hosts cease to be infected (and hence infectious) at sampling. 
 * -I Used to specify a CSV file of minimum and maximum **heights** (not dates) for each host's infection. Assuming branch lengths are in calendar time, these should be given in backwards time with the zero point being the time of the youngest tip in the tree.
