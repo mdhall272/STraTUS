@@ -1,0 +1,276 @@
+
+#' Enumerate transmission trees for the given pathogen phylogeny
+#'
+#' This function produces a list of class \code{tt.info} which can be used to randomly sample transmission trees for the input phylogeny
+#' @param tree A \code{phylo} object
+#' #' @param infectiousness.ends If this is TRUE, infectiousness is assumed to end with the last sampling time of each host. Incompatible with a specified \code{minimum.heights}.
+#' @param max.unsampled The maximum number of unsampled hosts in the transmission chain. The default is 0.
+#' @param minimum.heights A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. If \code{s} is given instead, these are automatically set to the height of the last tip from eah host, which enforces noninfectiousness at the time of the last sample. 
+#' @param maximum.heights A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host. 
+#' @param tip.map A list that maps every tip in the tree to a string dictating the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.
+#' @return A list of class \code{tt.info} with the following fields: 
+#' \itemize{
+#' \item{"tree"}{The input tree}
+#' \item{"tt.count"}{The total number of possible transmission trees}
+#' \item{"node.calculations"}{A list with the same length as the number of nodes of the tree and whose entries are indexed in the same order. If \code{max.unsampled} is 0, each has the following fields (the terminology here comes from the Hall paper):
+#' \itemize{
+#' \item{"p"}{The number of valid partitions of the subtree rooted at this node.}
+#' \item{"pstar"}{The number of valid partitions of the unrooted tree obtained by attaching a single extra tip to the root node of the suntree rooted at this node.}
+#' \item{"v"}{A list indexed by the set of hosts, whose entries are the number of valid partitions of the subtree rooted at this node where the root node is in the partition element from each host.}
+#' }
+#' Alternatively, if \code{max.unsampled} is greater than 0, the entries are:
+#' \itemize{
+#' \item{"p"}{A vector of length 1 + \code{max.unsampled} giving the number of valid partitions of the subtree rooted at this node if there are between 0 and \code{max.unsampled} (in order) partition elements containing no tips.}
+#' \item{"pstar"}{A vector of length 1 + \code{max.unsampled} giving the number of valid partitions of the tree obtained from the subtree rooted at this node by adding an extra tip connected to the root node, if there are between 0 and \code{max.unsampled} (in order) partition elements containing no tips.}
+#' \item{"ps"}{As with \code{p}, except this counts only partitions that have the root node in a sampled component (one containing a tip).}
+#' \item{"pu"}{As with \code{p}, except this counts only partitions that have the have the root node in an unsampled component (one containing no tip).} 
+#' \item{"v"}{A list indexed by the set of hosts and "unsampled", whose entries are, for each host and an unsampled host, a vector of length 1 + \code{max.unsampled} counting the number of partitions that have the root node in that host's component if there are between 0 and \code{max.unsampled} partition elements containing no tips.}
+#' }
+#' }
+#' }
+
+
+tt.sampler <- function(tree, 
+                       max.unsampled = 0,
+                       infectiousness.ends = F, 
+                       minimum.heights = NULL,
+                       maximum.heights = NULL,   
+                       tip.map = NULL){
+  if(!is.binary(tree)){
+    stop("Binary trees only!\n")
+  }
+  
+  if(infectiousness.ends & !is.null(minimum.heights)){
+    stop("The universal infectiousness.ends argument is incompatible with individually-specified minimum heights")
+  }
+  
+  has.heights <- infectiousness.ends | !is.null(minimum.heights) |!is.null(maximum.heights)
+  has.unsampled <- max.unsampled > 0
+  has.multisampled <- !is.null(tip.map)
+  if(sum(has.heights, has.unsampled, has.multisampled) > 1){
+    stop("This combination of variations is not currently supported.")
+  }
+  if(infectiousness.ends){
+    minimum.heights <- sapply(1:length(tree$tip.label), function(x) {
+      get.node.height(tree, x)
+    })
+  }
+  
+}
+
+up.phase <- function(tree, node, node.calculations, max.unsampled){
+  if(is.tip(tree, node)){
+    
+    node.info <- list()
+    
+    # rows are patients except the last row is "unsampled". Columns are the number of unsampled partition elements in the tree, shifted by 1 because zero is a thing
+    
+    v <- matrix(0, nrow = tip.count + 1, ncol = max.unsampled + 1)
+    v[node, 1] <- 1
+    
+    node.info$v <- v
+    node.info$p <- c(1, rep(0, max.unsampled))
+    node.info$pstar <- c(1, rep(0, max.unsampled))
+    if(ncol(v)>1){
+      node.info$ps <- colSums(v[1:tip.count,])
+    } else {
+      node.info$ps <- sum(v)
+    }
+    node.info$pu <- v[tip.count + 1,]
+    
+    node.calculations[[node]] <- node.info
+    
+  } else {
+    for(child in Children(tree, node)){
+      node.calculations <- up.phase(tree, child, node.calculations, max.unsampled)
+    }
+    
+    node.info <- list()
+    
+    v <- matrix(0, nrow = tip.count + 1, ncol = max.unsampled + 1)
+    
+    # the row for the unsampled state
+    
+    v[tip.count + 1, ] <- sapply(0:max.unsampled, function(x){
+      if(x==0){
+        return(0)
+      } else {
+        # how many unsampled elements
+        
+        # how many that are not the root unsampled element
+        remaining.us.elements <- x - 1
+        out <- 0
+        for(i in 0:remaining.us.elements){
+          j = remaining.us.elements - i
+          children <- Children(tree,node)
+          
+          term <- node.calculations[[children[1]]]$pstar[i+1] * node.calculations[[children[2]]]$pstar[j+1]
+          out <- out + term
+        }
+        return(out)
+      }
+    } )
+    
+    node.info$pu <- v[tip.count + 1,]
+    
+    # the rest of the rows
+    kids <- Children(tree,node)
+    
+    for(host in 1:tip.count){
+      temp <- sapply(0:max.unsampled, function(x){
+        out <- 0
+        for(i in 0:x){
+          j = x - i
+          term <- node.calculations[[kids[1]]]$v[host,i+1] * node.calculations[[kids[2]]]$pstar[j+1] +
+            node.calculations[[kids[2]]]$v[host,i+1] * node.calculations[[kids[1]]]$pstar[j+1]
+          out <- out + term
+        }
+        return(out)
+      })
+      v[host,] <- temp
+    }
+    
+    if(ncol(v)>1){
+      node.info$ps <- colSums(v[1:tip.count,])
+    } else {
+      node.info$ps <- sum(v)
+    }
+    
+    node.info$p <- node.info$pu + node.info$ps 
+    
+    node.info$pstar <- sapply(0:max.unsampled, function(x) {
+      out <- node.info$p[x+1]
+      for(i in 0:x){
+        j = x - i
+        
+        term <- node.calculations[[kids[1]]]$pstar[i+1] * node.calculations[[kids[2]]]$pstar[j+1]
+        out <- out + term
+      }
+      return(out)
+    })
+    
+    node.info$v <- v
+    node.calculations[[node]] <- node.info
+  }
+  return(node.calculations)
+}
+
+height.aware.up.phase <- function(tree, node, node.calculations, height.limits){
+  if(is.tip(tree, node)){
+    
+    if(get.node.height(tree, node) < height.limits[node,1] | get.node.height(tree, node) > height.limits[node,2]){
+      stop("Bad node height limits for node ",node, sep="")
+    }
+    
+    node.info <- list()
+    
+    # rows are patients except the last row is "unsampled". Columns are the number of unsampled partition elements in the tree, shifted by 1 because zero is a thing
+    
+    v <- rep(0, tip.count)
+    v[node] <- 1
+    
+    node.info$v <- v
+    node.info$p <- 1
+    node.info$pstar <- rep(1, tip.count)
+    node.calculations[[node]] <- node.info
+    
+  } else {
+    for(child in Children(tree, node)){
+      node.calculations <- height.aware.up.phase(tree, child, node.calculations, height.limits)
+    }
+    
+    node.info <- list()
+    
+    v <- rep(0, tip.count)
+    pstarprod <- rep(1, tip.count)
+    
+    kids <- Children(tree,node)
+    
+    for(kid in kids){
+      desc.tips <- unlist(Descendants(tree, kid, type="tips"))
+      v[desc.tips] <- node.calculations[[kid]]$v[desc.tips]
+      
+      for(kid2 in kids){
+        if(kid != kid2){
+          v[desc.tips] <- v[desc.tips]*node.calculations[[kid2]]$pstar[desc.tips]
+        }
+      }
+      pstarprod <- pstarprod*node.calculations[[kid]]$pstar
+    }
+    
+    height <- get.node.height(tree, node)
+    
+    # replace v for those out of range with 0
+    
+    v[which(height.limits[,1] > height | height.limits[,2] < height )] <- 0
+    
+    node.info$v <- v
+    node.info$p <- sum(v)
+    node.info$pstar <- rep(node.info$p, tip.count) 
+    tips.lower <- which(height.limits[,1] <= get.node.height(tree,node))
+    
+    node.info$pstar[tips.lower] <- node.info$pstar[tips.lower] + pstarprod[tips.lower]
+    node.calculations[[node]] <- node.info
+  }
+  return(node.calculations)
+}
+
+multiply.sampled.up.phase <- function(tree, node, node.calculations, bridge){
+  if(is.tip(tree, node)){
+    
+    node.info <- list()
+    
+    v <- rep(0, length(unique(na.omit(bridge))))
+    v[bridge[node]] <- 1
+    
+    node.info$v <- v
+    node.info$p <- 1
+    node.info$pstar <- 1
+    node.calculations[[node]] <- node.info
+    
+  } else {
+    for(child in Children(tree, node)){
+      node.calculations <- multiply.sampled.up.phase(tree, child, node.calculations, bridge)
+    }
+    
+    node.info <- list()
+    
+    v <- rep(0, length(unique(na.omit(bridge))))
+    pstarprod <- 1
+    
+    kids <- Children(tree,node)
+    
+    desc.tips.1 <- unlist(Descendants(tree, kids[1], type="tips"))
+    desc.tips.2 <- unlist(Descendants(tree, kids[2], type="tips"))
+    if (length(intersect(bridge[desc.tips.1], bridge[desc.tips.2]))==1){
+      # this is the situation where this is the top of a bridge
+      
+      only.valid.host <- intersect(bridge[desc.tips.1], bridge[desc.tips.2])
+      
+      v[only.valid.host] <- node.calculations[[kids[1]]]$v[only.valid.host] * node.calculations[[kids[2]]]$v[only.valid.host]
+      
+    } else {
+      for(host.no in 1:max(na.omit(bridge))){
+        if(!is.na(bridge[node]) & bridge[node] != host.no){
+          v[host.no] <- 0
+        } else if(host.no %in% bridge[desc.tips.1]){
+          v[host.no] <- node.calculations[[kids[1]]]$v[host.no] * node.calculations[[kids[2]]]$pstar
+        } else if(host.no %in% bridge[desc.tips.2]) {
+          v[host.no] <- node.calculations[[kids[2]]]$v[host.no] * node.calculations[[kids[1]]]$pstar
+        }
+      }
+    }
+    
+    if(is.na(bridge[node])){
+      pstar <- sum(v) + node.calculations[[kids[1]]]$pstar * node.calculations[[kids[2]]]$pstar
+    } else {
+      pstar <- sum(v) 
+    }
+    
+    node.info$v <- v
+    node.info$p <- sum(v)
+    node.info$pstar <- pstar 
+    node.calculations[[node]] <- node.info
+  }
+  return(node.calculations)
+}
