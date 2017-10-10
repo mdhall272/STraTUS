@@ -58,7 +58,7 @@ if(args$infectionEnds){
       if(is.na(row[2])){
         row[2] <- Inf
       }
-      
+
       return(row)
     } else {
       cat("Warning: tip ",tree$tip.label[x]," does not occur in timings file. No temporal limits will be applied to this host.\n", sep="")
@@ -81,7 +81,7 @@ if(multiple.sampling){
   host.map <- raw.mi[reordering,2]
   host.labels <- unique(host.map)
   host.labels <- host.labels[order(host.labels)]
-} 
+}
 
 # height.limits <- lapply(1:length(tree$tip.label), function(x){
 #   h <- get.node.height(tree, x)
@@ -103,7 +103,7 @@ if(unsampled.count == 0 & !multiple.sampling){
   host.labels <- tree$tip.label
 } else if(unsampled.count > 0){
   host.labels <- c(tree$tip.label, paste("uh", 1:unsampled.count, sep=""))
-} 
+}
 
 annotations.df <- data.frame(node.no = seq(1,tip.count+tree$Nnode))
 
@@ -111,13 +111,13 @@ parents.df <- data.frame(child = host.labels)
 
 if(unsampled.count==0 & !multiple.sampling){
   if(has.timings){
-    
+
     node.calculations <- height.aware.up.phase(tree, getRoot(tree), list(), height.limits)
-    
+
     if(node.calculations[[getRoot(tree)]]$p == 0){
       stop("Timings prevent any valid partitions of this tree")
     }
-    
+
     for(i in seq(1:sample.count)){
       current.host.count <- tip.count
       a.sample <- height.aware.down.phase(tree, getRoot(tree), vector(), node.calculations, height.limits)
@@ -125,12 +125,12 @@ if(unsampled.count==0 & !multiple.sampling){
       annotations.df[[annot.column.name]] <- host.labels[a.sample]
       parents.vector <- get.parents.vector(tree, a.sample)
       par.column.name <- paste0("Sample.",i,".parent")
-      
+
       parents.df[[par.column.name]] <- sapply(parents.vector, function(x) if(x!=0) return(host.labels[x]) else return("root") )
     }
   } else {
     node.calculations <- up.phase(tree, getRoot(tree), list(), 0)
-    
+
     for(i in seq(1:sample.count)){
       current.host.count <- tip.count
       a.sample <- down.phase(tree, getRoot(tree), vector(), node.calculations, 0)
@@ -138,44 +138,44 @@ if(unsampled.count==0 & !multiple.sampling){
       annotations.df[[annot.column.name]] <- host.labels[a.sample]
       parents.vector <- get.parents.vector(tree, a.sample)
       par.column.name <- paste0("Sample.",i,".parent")
-      
+
       parents.df[[par.column.name]] <- sapply(parents.vector, function(x) if(x!=0) return(host.labels[x]) else return("root") )
     }
-    
+
   }
 } else if(!multiple.sampling) {
   if(has.timings){
     stop("Combination of unsampled hosts and infectiousness time limits not currently supported.")
   } else {
     node.calculations <- up.phase(tree, getRoot(tree), list(), unsampled.count)
-    
+
     counts <- node.calculations[[getRoot(tree)]]$p
-    region.count.weights <- sapply(0:unsampled.count, function(x) counts[x+1]*choose(tip.count + x + unsampled.count - x - 1,unsampled.count - x))
-    
+    region.count.weights <- sapply(0:unsampled.count, function(x) counts[x+1]*choose(tip.count + unsampled.count - 1, tip.count + x - 1))
+
     for(i in seq(1:sample.count)){
-      
+
       no.regions <- sample(0:unsampled.count, 1, prob=region.count.weights)
-      
+
       current.host.count <- tip.count
-      
+
       a.sample <- down.phase(tree, getRoot(tree), vector(), node.calculations, no.regions)
-      
+
       if(max(a.sample) != tip.count + no.regions){
         cat("Error - failed to insert enough unsampled hosts. Contact the author.\n")
         quit("N")
       }
-      
+
       branch.us.position.choice <- vector()
       if(no.regions!=unsampled.count){
         branch.us.position.options <- combinations(tip.count + no.regions, unsampled.count - no.regions,  repeats.allowed = T )
         branch.us.position.choice <- branch.us.position.options[sample(1:nrow(branch.us.position.options), 1),]
-      } 
-      
+      }
+
       annot.column.name <- paste0("Sample.",i,".annotation")
       interv.column.name <- paste0("Sample.",i,".intervening")
-      
+
       annotations.df[[annot.column.name]] <- host.labels[a.sample]
-      
+
       interventions <- rep(0, tip.count + tree$Nnode)
       parents <- vector()
       for(host in 1:(tip.count + no.regions)){
@@ -197,16 +197,16 @@ if(unsampled.count==0 & !multiple.sampling){
         # should now be at the root of this partition element
         interventions[a.node] <- sum(branch.us.position.choice == host)
       }
-      
+
       annotations.df[[interv.column.name]] <- interventions
-      
+
       parents.vector <- get.parents.vector(tree, a.sample, interventions)
       par.column.name <- paste0("Sample.",i,".parent")
       parents.df[[par.column.name]] <- sapply(parents.vector, function(x) if(x!=0) return(host.labels[x]) else return("root") )
     }
   }
 } else {
-  
+
   # bridge-building
   bridge <- rep(NA, length(tree$tip.label) + tree$Nnode)
   for(host in host.labels){
@@ -240,7 +240,7 @@ if(unsampled.count==0 & !multiple.sampling){
     par.column.name <- paste0("Sample.",i,".parent")
     parents.df[[par.column.name]] <- sapply(parents.vector, function(x) if(x!=0) return(host.labels[x]) else return("root") )
   }
-  
+
 }
 
 write.csv(annotations.df, paste0(output.string,"_annotations.csv"), row.names = F, quote=F)
@@ -259,23 +259,23 @@ if(draw){
         }
         return(T)
       })
-      
-      
+
+
       branch.colour.annots<- annots
       branch.colour.annots[which(first.in.split)] <- NA
-      
-      ggtree(tree, aes(col=branch.colour.annots), size=1.5) + 
-        geom_tiplab(aes(col=annots), hjust=-1) + 
+
+      ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
+        geom_tiplab(aes(col=annots), hjust=-1) +
         geom_point(aes(col=annots), size=4) +
         scale_fill_hue(na.value = "grey") +
-        scale_color_hue(na.value = "grey") 
+        scale_color_hue(na.value = "grey")
       ggsave(paste0(output.string,"_sample_",(col-1),"_tree.pdf"))
     }
   } else {
     for(col in seq(2, ncol(annotations.df), by=2)){
       node.annots <- annotations.df[,col]
       branch.annots <- annotations.df[,col+1]
-      
+
       first.in.split <- sapply(1:(tip.count + tree$Nnode), function(x) {
         if(getRoot(tree) == x){
           return(T)
@@ -285,17 +285,17 @@ if(draw){
         }
         return(T)
       })
-      
+
       branch.colour.annots <- node.annots
       branch.colour.annots[which(first.in.split)] <- NA
-      
+
       branch.annots[which(!first.in.split)] <- NA
-      
+
       adjustments <- rep(0.5, tip.count+tree$Nnode)
       adjustments[getRoot(tree)] <- 1.5
-      
-      ggtree(tree, aes(col=branch.colour.annots), size=1.5) + 
-        geom_tiplab(aes(col=node.annots), hjust=-1) + 
+
+      ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
+        geom_tiplab(aes(col=node.annots), hjust=-1) +
         geom_point(aes(col=node.annots), size=4) +
         scale_fill_hue(na.value = "grey") +
         scale_color_hue(na.value = "grey") +

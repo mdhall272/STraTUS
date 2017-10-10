@@ -1,13 +1,18 @@
+node.count <- function(tree){
+  tree$Nnode + length(tree$tip.label)
+}
+
 is.tip <- function(tree, node) {
   return(node <= length(tree$tip.label))
 }
 
+# mrca.phylo doesn't work on a single tip and we need that
+
 mrca.phylo.or.unique.tip <- function(tree, node) {
   if (length(node) == 1) {
-    return(node)
+    node
   } else {
-    mrca <- mrca.phylo(tree, node)
-    return(mrca)
+    mrca.phylo(tree, node)
   }
 }
 
