@@ -4,5 +4,6 @@ Version: 1.0.0
 Authors@R: person("Matthew", "Hall", email = "matthew.hall@bdi.ox.ac.uk", role = c("aut", "cre"))
 Description: For a single, known pathogen phylogeny, the functions here enumerate and uniformly sample from the set of compatible transmission trees. A complete transmission bottleneck and no superinfection or reinfection are assumed; complete and single sampling are not.
 Depends: R (>= 3.4.1), ape, igraph, gtools
+Suggests: ggtree
 License: GPL
 Encoding: UTF-8

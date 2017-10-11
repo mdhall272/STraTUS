@@ -126,7 +126,7 @@ tt.sampler <- function(tree,
 
   out <- list(tree = tree, hosts = hosts, tt.count = results[[getRoot(tree)]]$p, height.limits = height.limits, bridge = bridge, type=type, node.calculations = results)
 
-  class(out) <- append(class(out), "tt.info")
+  class(out) <- append(class(out), "tt.generator")
 
   return(out)
 }

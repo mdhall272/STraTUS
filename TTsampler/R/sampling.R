@@ -1,37 +1,55 @@
 
 #' Sample one or more transmission trees uniformly
 #'
-#' @param tt.info A list of class \code{tt.info} produced by \code{tt.sampler}.
+#' @param tt.info A list of class \code{tt.generator} produced by \code{tt.sampler}.
 #' @param count How many transmission trees to sample.
 #' @param unsampled The number of unsampled hosts in the transmission chain. A value >0 requires a \code{tt.info} list whose \code{type} is \code{unsampled}.
-#' @return A list, each item of which is the set of node annotations (by index in \code{tt.info$hosts}) for an independently-sampled transmission tree.
+#' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overload onto the phylogeny.
+#' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
+#' \itemize{
+#' \item{"annotations"}{Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
+#' \item{"hidden"}{Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
+#' \item{"picture"}{Present if \code{draw} was specified; a \code{ggtree} object.}
+#' }
 
-sample.tt <- function(tt.info, count = 1, unsampled = 0){
-  return(sample.partial.tt(tt.info, count, unsampled, getRoot(tt.info$tree),  NULL, F))
+
+sample.tt <- function(tt.info, count = 1, unsampled = 0, draw = F, network = F){
+  return(sample.partial.tt(tt.info, count, unsampled, getRoot(tt.info$tree),  NULL, F, draw, network))
 }
 
 #' Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed
 #'
-#' @param tt.info A list of class \code{tt.info} produced by \code{tt.sampler}.
+#' @param tt.info A list of class \code{tt.generator} produced by \code{tt.sampler}.
 #' @param count How many transmission trees to sample.
-#' @param unsampled The number of unsampled hosts in the transmission chain. A value >0 requires a \code{tt.info} list whose \code{type} is \code{unsampled}.
-#' @param existing An existing numerical vector or matrix of annotations. If the \code{type} of \code{tt.info} is not \code{unsampled} then this is a single vector whose length is the node count of \code{tt.info$tree}. The values are the index, in \code{tt.info$hosts}, of the host assigned to each node. If the \code{type} of \code{tt.info} is \code{unsampled} then it is an matrix with two columns; the first is as above and the second counts how many "hidden" unsampled hosts appear on the parent branch of each node. Usually these are produced by a \code{sample.tt} or \code{sample.partial.tt} call.
+#' @param unsampled The number of unsampled hosts in the transmission chain. (The whole transmission chain, even if only part of the transmission tree is being resampled). A value >0 requires a \code{tt.info} list whose \code{type} is \code{unsampled}.
+#' @param existing An existing list of class \code{tt}, representing a transmission tree to be modified. Usually these are produced by a \code{sample.tt} or \code{sample.partial.tt} call.
 #' @param starting.node The root of the subtree to resample. If this is the root of the whole tree, then \code{existing} is irrelevent (but generally \code{sample.tt} should be used for this purpose).
-#' @param check.integrity Whether to check if \code{existing} is indeed a valid transmission tree. Recommended if \code{existing} is not from \code{sample.tt} or \code{sample.partial.tt}.
-#' @return A list, each item of which is the set of node annotations (by index in \code{tt.info$hosts}) for an independently-sampled transmission tree
+#' @param check.integrity Whether to check if \code{existing} is indeed a valid transmission tree.
+#' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overload onto the phylogeny
+#' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
+#' \itemize{
+#' \item{"annotations"}{Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
+#' \item{"hidden"}{Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
+#' \item{"picture"}{Present if \code{draw} was specified; a \code{ggtree} object.}
+#' }
 
-
-sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node = getRoot(tt.info$tree), existing=NULL, check.integrity = T){
-  if(!inherits(tt.info, "tt.info")){
-    stop("Input is not a list of class tt.info")
+sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node = getRoot(tt.info$tree), existing=NULL, check.integrity = T, draw = F, network = F){
+  if(!inherits(tt.info, "tt.generator")){
+    stop("Input is not a list of class tt.generator")
   }
 
   if(unsampled > 0 & tt.info$type != "unsampled"){
     stop("This sampler will not generate trees with unsampled hosts.")
   }
 
-  if(unsampled > 0 & (ncol(tt.info$node.calculations[[1]]$v) - 1)<unsampled){
-    stop("This sampler will not generate trees with this many unsampled hosts.")
+  if(unsampled > 0){
+    if ((ncol(tt.info$node.calculations[[1]]$v) - 1) < unsampled){
+      stop("This sampler will not generate trees with this many unsampled hosts.")
+    }
+  }
+
+  if(is.null(existing) & starting.node!=getRoot(tt.info$tree)){
+    stop("An existing sample is required to resample the tree from any node other than the root.")
   }
 
   tree <- tt.info$tree
@@ -40,16 +58,10 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
   existing.hidden <- rep(0, node.count(tree))
 
   if(unsampled > 0 & !is.null(existing)){
-    if(!is.matrix(existing)){
-      stop("Existing annotation is in the wrong format.")
-    }
-    existing.annot <- existing[,1]
-    existing.hidden <- existing[,2]
+    existing.annot <- existing$annotations
+    existing.hidden <- existing$hidden
   } else {
-    if(is.matrix(existing)){
-      stop("Existing annotation is in the wrong format.")
-    }
-    existing.annot <- existing
+    existing.annot <- existing$annotations
   }
 
   if(check.integrity){
@@ -62,8 +74,8 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       stop("Existing sample vector must be numerical")
     }
 
-    if(!setequal(1:length(tt.info$hosts), unique(existing.annot))){
-      stop("Missing or extra hosts amongst the annotations in the existing sample vector")
+    if(max(existing.annot) > length(tt.info$hosts)){
+      stop("Extra hosts amongst the annotations in the existing sample vector")
     }
 
     for(host in 1:(length(tt.info$hosts))){
@@ -97,19 +109,70 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
   }
 
   if(tt.info$type=="basic"){
-    return(list(annotations=replicate(count, .basic.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations))))
+    results <- replicate(count, .basic.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations))
+
+    results <- lapply(seq_len(ncol(results)), function(x){
+      item <- list()
+      item$annotations <- results[,x]
+      class(item) <- append(class(item), "tt")
+      item
+    })
+
+    if(draw){
+      results <- lapply(results, function(x){
+        picture <- draw.fully.sampled(tt.info, x)
+        x$picture <- picture
+        x
+      })
+    }
+
+    return(results)
   }
   if(tt.info$type=="multisampled"){
-    if(!is.null(tt.info$bridge)){
-      stop("This tt.info should have a bridge but it is not present.")
+    if(is.null(tt.info$bridge)){
+      stop("This tt.generator should have a bridge but it is not present.")
     }
-    return(list(annotations=replicate(count, .multiply.sampled.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, tt.info$bridge))))
+
+    results <- replicate(count, .multiply.sampled.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, tt.info$bridge))
+
+    results <- lapply(seq_len(ncol(results)), function(x){
+      item <- list()
+      item$annotations <- results[,x]
+      class(item) <- append(class(item), "tt")
+      item
+    })
+
+    if(draw){
+      results <- lapply(results, function(x){
+        x$picture <- draw.fully.sampled(tt.info, x)
+        x
+      })
+    }
+
+    return(results)
   }
   if(tt.info$type=="height.aware"){
-    if(!is.null(tt.info$height.limits)){
-      stop("This tt.info should have height.limits but they are not present.")
+    if(is.null(tt.info$height.limits)){
+      stop("This tt.generator should have height.limits but they are not present.")
     }
-    return(list(annotations=replicate(count, .height.aware.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, tt.info$height.limits))))
+
+    results <- replicate(count, .height.aware.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, tt.info$height.limits))
+
+    results <- lapply(seq_len(ncol(results)), function(x){
+      item <- list()
+      item$annotations <- results[,x]
+      class(item) <- append(class(item), "tt")
+      item
+    })
+
+    if(draw){
+      results <- lapply(results, function(x){
+        x$picture <- draw.fully.sampled(tt.info, x)
+        x
+      })
+    }
+
+    return(results)
   }
   if(tt.info$type=="unsampled"){
 
@@ -117,13 +180,13 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
     if(starting.node!=getRoot(tree)){
 
-      unsampled.nos <- seq(length(tt.info$tree$tip.label) + 1, length(tt.info$tree$tip.label))
+      unsampled.nos <- seq(length(tt.info$tree$tip.label) + 1, length(tt.info$tree$tip.label) + unsampled)
 
       subtree.nodes <- c(starting.node, unlist(Descendants(tree, starting.node, type="all")))
       other.nodes <- setdiff(1:node.count(tree), subtree.nodes)
 
       # We leave alone everything not involving the subtree rooted at starting.node.
-      # Hidden hosts on that branch ARE resampled (they have to be, because it may not end up an infection branch)
+      # Hidden hosts on the root branch of that ARE resampled (they have to be, because it may not end up an infection branch)
       # Existing unsampled hosts exist outside the subtree but can also exist inside it
       # Only visible hosts have numbers
 
@@ -154,6 +217,8 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
     } else {
       starting.current.host.count <- length(tree$tip.label)
       existing.unsampled.hosts <- 0
+      subtree.nodes <- 1:node.count(tree)
+      other.nodes <- vector()
       remaining.unsampled.hosts <- unsampled
     }
 
@@ -166,7 +231,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
       visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(tip.count + remaining.unsampled.hosts - 1, tip.count + x - 1))
     } else {
-      # Oh holy cow.
+
       parent.host <- existing.annot[Ancestors(tree, starting.node, type="parent")]
       tip.hosts <- unlist(Descendants(tree, starting.node, type="tips"))
       tip.count <- length(tip.hosts)
@@ -178,7 +243,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
         root.forced <- T
 
         counts <- tt.info$node.calculations[[starting.node]]$v[parent.host,]
-        visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(tip.count + remaining.unsampled.hosts - 2, tip.count + x - 1))
+        visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(tip.count + remaining.unsampled.hosts - 2, tip.count + x - 2))
 
       } else {
         # If the partition element to which existing.node is not forced, then the parent is assigned either to an existing unsampled element or to the host on a
@@ -194,15 +259,20 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
     annotations <- vector()
     hidden <- vector()
 
+    results <- list()
+
     for(i in 1:count){
+      out <- list()
+      class(out) <- append(class(out), "tt")
+
       current.host.count <<- starting.current.host.count
 
       no.visible <- sample(0:remaining.unsampled.hosts, 1, prob=visible.count.weights)
       no.hidden <- remaining.unsampled.hosts - no.visible
 
-      a.sample <- .unsampled.down.phase(tree, starting.node, existing, tt.info$node.calculations, no.visible)
+      a.sample <- .unsampled.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, no.visible)
 
-      annotations <- cbind(annotations, a.sample)
+      out$annotations <- a.sample
 
       branch.us.position.choice <- vector()
       if(no.visible != remaining.unsampled.hosts){
@@ -216,15 +286,30 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
       interventions <- existing.hidden
 
+      # wipe clean the subtree
+
+      interventions[subtree.nodes] <- 0
+
       if(starting.node == getRoot(tree)){
         need.new.ibs <- 1:(length(tree$tip.label) + no.visible)
       } else if(!root.forced){
-        need.new.ibs <- c(tip.hosts, (starting.current.host.count + 1):no.visible)
+        if(no.visible==0){
+          need.new.ibs <- tip.hosts
+        } else {
+          need.new.ibs <- c(tip.hosts, starting.current.host.count + (1:no.visible))
+        }
       } else {
-        need.new.ibs <- c(setdiff(tip.hosts, parent.host), (starting.current.host.count + 1):no.visible)
+        if(no.visible==0){
+          need.new.ibs <- c(setdiff(tip.hosts, parent.host))
+        } else {
+          need.new.ibs <- c(setdiff(tip.hosts, parent.host), starting.current.host.count + (1:no.visible))
+        }
       }
 
-      for(host in need.new.ibs){
+      interventions[which(a.sample %in% need.new.ibs)] <- 0
+
+      for(host in 1:(length(tree$tip.label) + no.visible)){
+
         # find a node in this region
         a.node <- which(a.sample==host)[1]
         parent.node <- Ancestors(tree, a.node, type="parent")
@@ -244,10 +329,17 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
         interventions[a.node] <- sum(branch.us.position.choice == which(need.new.ibs==host))
 
       }
-      hidden <- cbind(hidden, interventions)
+      out$hidden <- interventions
+
+      if(draw){
+        out$picture <- draw.incompletely.sampled(tt.info, out)
+      }
+
+      results[[i]] <- out
 
     }
-    return(list(annotations = annotations, hidden = hidden))
+
+    return(results)
   }
   stop("Unknown tt.info$type")
 }
@@ -436,4 +528,73 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
     result.vector <- .multiply.sampled.down.phase(tree, child, result.vector, info, bridge)
   }
   return(result.vector)
+}
+
+draw.fully.sampled <- function(tt.info, sample){
+
+  tree <- tt.info$tree
+
+  annots <- tt.info$hosts[sample$annotations]
+
+  first.in.split <- sapply(1:node.count(tree), function(x) {
+    if(getRoot(tree) == x){
+      return(T)
+    }
+    if(annots[x] == annots[Ancestors(tree, x, type="parent")]){
+      return(F)
+    }
+    return(T)
+  })
+
+  branch.colour.annots <- annots
+  branch.colour.annots[which(first.in.split)] <- NA
+
+  attr(tree, "annots") <- annots
+  attr(tree, "branch.colour.annots") <- branch.colour.annots
+
+  picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
+    geom_tiplab(aes(col=annots), hjust=-1) +
+    geom_point(aes(col=annots), size=4) +
+    scale_fill_hue(na.value = "grey") +
+    scale_color_hue(na.value = "grey")
+
+  picture
+}
+
+draw.incompletely.sampled <- function(tt.info, sample){
+  node.annots <- tt.info$hosts[sample$annotations]
+  branch.annots <- sample$hidden
+  tree <- tt.info$tree
+
+  first.in.split <- sapply(1:node.count(tree), function(x) {
+    if(getRoot(tree) == x){
+      return(T)
+    }
+    if(node.annots[x] == node.annots[Ancestors(tree, x, type="parent")]){
+      return(F)
+    }
+    return(T)
+  })
+
+  branch.colour.annots <- node.annots
+  branch.colour.annots[which(first.in.split)] <- NA
+
+  branch.annots[which(!first.in.split)] <- NA
+
+  adjustments <- rep(0.5, node.count(tree))
+  adjustments[getRoot(tree)] <- 1.5
+
+  attr(tree, "node.annots") <- node.annots
+  attr(tree, "branch.colour.annots") <- branch.colour.annots
+  attr(tree, "branch.annots") <- branch.annots
+  attr(tree, "adjustments") <- adjustments
+
+  picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
+    geom_tiplab(aes(col=node.annots), hjust=-1) +
+    geom_point(aes(col=node.annots), size=4) +
+    scale_fill_hue(na.value = "grey") +
+    scale_color_hue(na.value = "grey") +
+    geom_text(aes(x=branch, label=branch.annots, hjust=adjustments), vjust=-0.5, col="black", na.rm=TRUE)
+
+  return(picture)
 }
