@@ -14,7 +14,7 @@ tt.generator(tree, max.unsampled = 0, infectiousness.ends = F,
 
 \item{infectiousness.ends}{If this is TRUE, infectiousness is assumed to end with the last sampling time of each host. Incompatible with a specified \code{minimum.heights}.}
 
-\item{minimum.heights}{A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. If \code{s} is given instead, these are automatically set to the height of the last tip from eah host, which enforces noninfectiousness at the time of the last sample.}
+\item{minimum.heights}{A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host.}
 
 \item{maximum.heights}{A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host.}
 
@@ -47,5 +47,5 @@ Alternatively, if \code{max.unsampled} is greater than 0, the entries are:
 }
 }
 \description{
-This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees.
+This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees. Note that at present, no combinations of variations (unsampled hosts, multiply-sampled hosts, and time constraints) are supported.
 }
