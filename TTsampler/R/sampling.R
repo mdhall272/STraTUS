@@ -1,29 +1,31 @@
 
 #' Sample one or more transmission trees uniformly
 #'
-#' @param tt.info A list of class \code{tt.generator} produced by \code{tt.sampler}.
+#' @param generator A list of class \code{tt.generator} produced by \code{tt.generator}.
 #' @param count How many transmission trees to sample.
-#' @param unsampled The number of unsampled hosts in the transmission chain. A value >0 requires a \code{tt.info} list whose \code{type} is \code{unsampled}.
+#' @param unsampled The number of unsampled hosts in the transmission chain. A value >0 requires a \code{generator} list whose \code{type} is \code{unsampled}.
 #' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overlaid onto the phylogeny.
 #' @param network Produce the transmission trees in \code{igraph} format.
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
-#' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
+#' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
 #' \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
 #' \item{\code{picture}}{ Present if \code{draw} was specified; a \code{ggtree} object.}
 #' \item{\code{igraph}}{ Present if \code{network} was specified; an \code{igraph} object.}
 #' }
+#' @export sample.tt
+#' @import ggtree phangorn igraph
 
 
-sample.tt <- function(tt.info, count = 1, unsampled = 0, draw = F, network = F){
-  return(sample.partial.tt(tt.info, count, unsampled, getRoot(tt.info$tree),  NULL, F, draw, network))
+sample.tt <- function(generator, count = 1, unsampled = 0, draw = F, network = F){
+  return(sample.partial.tt(generator, count, unsampled, phangorn::getRoot(generator$tree),  NULL, F, draw, network))
 }
 
 #' Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed
 #'
-#' @param tt.info A list of class \code{tt.generator} produced by \code{tt.sampler}.
+#' @param generator A list of class \code{tt.generator} produced by \code{tt.sampler}.
 #' @param count How many transmission trees to sample.
-#' @param unsampled The number of unsampled hosts in the transmission chain. (The whole transmission chain, even if only part of the transmission tree is being resampled). A value >0 requires a \code{tt.info} list whose \code{type} is \code{unsampled}.
+#' @param unsampled The number of unsampled hosts in the transmission chain. (The whole transmission chain, even if only part of the transmission tree is being resampled). A value >0 requires a \code{generator} list whose \code{type} is \code{unsampled}.
 #' @param existing An existing list of class \code{tt}, representing a transmission tree to be modified. Usually these are produced by a \code{sample.tt} or \code{sample.partial.tt} call.
 #' @param starting.node The root of the subtree to resample. If this is the root of the whole tree, then \code{existing} is irrelevent (but generally \code{sample.tt} should be used for this purpose).
 #' @param check.integrity Whether to check if \code{existing} is indeed a valid transmission tree.
@@ -31,32 +33,34 @@ sample.tt <- function(tt.info, count = 1, unsampled = 0, draw = F, network = F){
 #' @param network Produce the transmission trees in \code{igraph} format.
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
-#' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
+#' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
 #' \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
 #' \item{\code{picture}}{ Present if \code{draw} was specified; a \code{ggtree} object.}
 #' \item{\code{igraph}}{ Present if \code{network} was specified; an \code{igraph} object.}
 #' }
+#' @export sample.partial.tt
+#' @import ggtree phangorn igraph
 
-sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node = getRoot(tt.info$tree), existing=NULL, check.integrity = T, draw = F, network = F){
-  if(!inherits(tt.info, "tt.generator")){
+sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node = phangorn::getRoot(generator$tree), existing=NULL, check.integrity = T, draw = F, network = F){
+  if(!inherits(generator, "tt.generator")){
     stop("Input is not a list of class tt.generator")
   }
 
-  if(unsampled > 0 & tt.info$type != "unsampled"){
+  if(unsampled > 0 & generator$type != "unsampled"){
     stop("This sampler will not generate trees with unsampled hosts.")
   }
 
   if(unsampled > 0){
-    if ((ncol(tt.info$node.calculations[[1]]$v) - 1) < unsampled){
+    if ((ncol(generator$node.calculations[[1]]$v) - 1) < unsampled){
       stop("This sampler will not generate trees with this many unsampled hosts.")
     }
   }
 
-  if(is.null(existing) & starting.node!=getRoot(tt.info$tree)){
+  if(is.null(existing) & starting.node!=phangorn::getRoot(generator$tree)){
     stop("An existing sample is required to resample the tree from any node other than the root.")
   }
 
-  tree <- tt.info$tree
+  tree <- generator$tree
 
   existing.annot <- rep(0, node.count(tree))
   existing.hidden <- rep(0, node.count(tree))
@@ -78,11 +82,11 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       stop("Existing sample vector must be numerical")
     }
 
-    if(max(existing.annot) > length(tt.info$hosts)){
+    if(max(existing.annot) > length(generator$hosts)){
       stop("Extra hosts amongst the annotations in the existing sample vector")
     }
 
-    for(host in 1:(length(tt.info$hosts))){
+    for(host in 1:(length(generator$hosts))){
       nodes <- which(existing.annot==host)
 
       ok <- T
@@ -90,8 +94,8 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
       for(node.1 in nodes){
         for(node.2 in nodes){
-          if(node.1!=node.2 & !(node.1 %in% Ancestors(tree, node.2)) & !(node.2 %in% Ancestors(tree, node.1))){
-            mrca <- mrca.phylo(tree, c(node.1, node.2))
+          if(node.1!=node.2 & !(node.1 %in% phangorn::Ancestors(tree, node.2)) & !(node.2 %in% phangorn::Ancestors(tree, node.1))){
+            mrca <- phangorn::mrca.phylo(tree, c(node.1, node.2))
             if(existing.annot[mrca]!=host){
               ok <- F
               break
@@ -112,8 +116,8 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
     }
   }
 
-  if(tt.info$type=="basic"){
-    results <- replicate(count, .basic.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations))
+  if(generator$type=="basic"){
+    results <- replicate(count, .basic.down.phase(tree, starting.node, existing.annot, generator$node.calculations))
 
     results <- lapply(seq_len(ncol(results)), function(x){
       item <- list()
@@ -124,7 +128,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
     if(draw){
       results <- lapply(results, function(x){
-        picture <- draw.fully.sampled(tt.info, x)
+        picture <- draw.fully.sampled(generator, x)
         x$picture <- picture
         x
       })
@@ -132,19 +136,19 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
     if(network){
       results <- lapply(results, function(x){
-        x$igraph <- build.igraph(tt.info, x)
+        x$igraph <- build.igraph(generator, x)
         x
       })
     }
 
     return(results)
   }
-  if(tt.info$type=="multisampled"){
-    if(is.null(tt.info$bridge)){
+  if(generator$type=="multisampled"){
+    if(is.null(generator$bridge)){
       stop("This tt.generator should have a bridge but it is not present.")
     }
 
-    results <- replicate(count, .multiply.sampled.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, tt.info$bridge))
+    results <- replicate(count, .multiply.sampled.down.phase(tree, starting.node, existing.annot, generator$node.calculations, generator$bridge))
 
     results <- lapply(seq_len(ncol(results)), function(x){
       item <- list()
@@ -155,26 +159,26 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
     if(draw){
       results <- lapply(results, function(x){
-        x$picture <- draw.fully.sampled(tt.info, x)
+        x$picture <- draw.fully.sampled(generator, x)
         x
       })
     }
 
     if(network){
       results <- lapply(results, function(x){
-        x$igraph <- build.igraph(tt.info, x)
+        x$igraph <- build.igraph(generator, x)
         x
       })
     }
 
     return(results)
   }
-  if(tt.info$type=="height.aware"){
-    if(is.null(tt.info$height.limits)){
+  if(generator$type=="height.aware"){
+    if(is.null(generator$height.limits)){
       stop("This tt.generator should have height.limits but they are not present.")
     }
 
-    results <- replicate(count, .height.aware.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, tt.info$height.limits))
+    results <- replicate(count, .height.aware.down.phase(tree, starting.node, existing.annot, generator$node.calculations, generator$height.limits))
 
     results <- lapply(seq_len(ncol(results)), function(x){
       item <- list()
@@ -185,29 +189,29 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
     if(draw){
       results <- lapply(results, function(x){
-        x$picture <- draw.fully.sampled(tt.info, x)
+        x$picture <- draw.fully.sampled(generator, x)
         x
       })
     }
 
     if(network){
       results <- lapply(results, function(x){
-        x$igraph <- build.igraph(tt.info, x)
+        x$igraph <- build.igraph(generator, x)
         x
       })
     }
 
     return(results)
   }
-  if(tt.info$type=="unsampled"){
+  if(generator$type=="unsampled"){
 
     # uuuuurghhh...
 
-    if(starting.node!=getRoot(tree)){
+    if(starting.node!=phangorn::getRoot(tree)){
 
-      unsampled.nos <- seq(length(tt.info$tree$tip.label) + 1, length(tt.info$tree$tip.label) + unsampled)
+      unsampled.nos <- seq(length(generator$tree$tip.label) + 1, length(generator$tree$tip.label) + unsampled)
 
-      subtree.nodes <- c(starting.node, unlist(Descendants(tree, starting.node, type="all")))
+      subtree.nodes <- c(starting.node, unlist(phangorn::Descendants(tree, starting.node, type="all")))
       other.nodes <- setdiff(1:node.count(tree), subtree.nodes)
 
       # We leave alone everything not involving the subtree rooted at starting.node.
@@ -249,16 +253,16 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
     root.forced <- F
 
-    if(starting.node == getRoot(tree)){
-      counts <- tt.info$node.calculations[[starting.node]]$p
+    if(starting.node == phangorn::getRoot(tree)){
+      counts <- generator$node.calculations[[starting.node]]$p
       tip.hosts <- 1:length(tree$tip.label)
       tip.count <- length(tree$tip.label)
 
       visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(tip.count + remaining.unsampled.hosts - 1, tip.count + x - 1))
     } else {
 
-      parent.host <- existing.annot[Ancestors(tree, starting.node, type="parent")]
-      tip.hosts <- unlist(Descendants(tree, starting.node, type="tips"))
+      parent.host <- existing.annot[phangorn::Ancestors(tree, starting.node, type="parent")]
+      tip.hosts <- unlist(phangorn::Descendants(tree, starting.node, type="tips"))
       tip.count <- length(tip.hosts)
       if(parent.host %in% tip.hosts){
         # Suppose that the parent of the starting node is assigned to a sampled host from within the subtree rooted at that node. Then our weights come from the
@@ -267,7 +271,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
         root.forced <- T
 
-        counts <- tt.info$node.calculations[[starting.node]]$v[parent.host,]
+        counts <- generator$node.calculations[[starting.node]]$v[parent.host,]
         visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(tip.count + remaining.unsampled.hosts - 2, tip.count + x - 2))
 
       } else {
@@ -275,7 +279,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
         # tip not from the subtree. The weights then come from pstar, and there are the tip count of the subtree, plus the column index, minus 1, infection branches
         # in the subtree which receive remaining.unsampled.hosts minus the column index
 
-        counts <- tt.info$node.calculations[[starting.node]]$pstar
+        counts <- generator$node.calculations[[starting.node]]$pstar
         visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(tip.count + remaining.unsampled.hosts - 1, tip.count + x - 1))
       }
 
@@ -295,16 +299,16 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       no.visible <- sample(0:remaining.unsampled.hosts, 1, prob=visible.count.weights)
       no.hidden <- remaining.unsampled.hosts - no.visible
 
-      a.sample <- .unsampled.down.phase(tree, starting.node, existing.annot, tt.info$node.calculations, no.visible)
+      a.sample <- .unsampled.down.phase(tree, starting.node, existing.annot, generator$node.calculations, no.visible)
 
       out$annotations <- a.sample
 
       branch.us.position.choice <- vector()
       if(no.visible != remaining.unsampled.hosts){
         if(!root.forced){
-          branch.us.position.options <- combinations(tip.count + no.visible, no.hidden, repeats.allowed = T )
+          branch.us.position.options <- gtools::combinations(tip.count + no.visible, no.hidden, repeats.allowed = T )
         } else {
-          branch.us.position.options <- combinations(tip.count + no.visible - 1, no.hidden, repeats.allowed = T )
+          branch.us.position.options <- gtools::combinations(tip.count + no.visible - 1, no.hidden, repeats.allowed = T )
         }
         branch.us.position.choice <- branch.us.position.options[sample(1:nrow(branch.us.position.options), 1),]
       }
@@ -315,7 +319,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
       interventions[subtree.nodes] <- 0
 
-      if(starting.node == getRoot(tree)){
+      if(starting.node == phangorn::getRoot(tree)){
         need.new.ibs <- 1:(length(tree$tip.label) + no.visible)
       } else if(!root.forced){
         if(no.visible==0){
@@ -337,14 +341,14 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
         # find a node in this region
         a.node <- which(a.sample==host)[1]
-        parent.node <- Ancestors(tree, a.node, type="parent")
+        parent.node <- phangorn::Ancestors(tree, a.node, type="parent")
         move.up <- parent.node != 0
         if(move.up){
           move.up <- a.sample[a.node] == a.sample[parent.node]
         }
         while(move.up){
           a.node <- parent.node
-          parent.node <- Ancestors(tree, a.node, type="parent")
+          parent.node <- phangorn::Ancestors(tree, a.node, type="parent")
           move.up <- parent.node != 0
           if(move.up){
             move.up <- a.sample[a.node] == a.sample[parent.node]
@@ -357,11 +361,11 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       out$hidden <- interventions
 
       if(draw){
-        out$picture <- draw.incompletely.sampled(tt.info, out)
+        out$picture <- draw.incompletely.sampled(generator, out)
       }
 
       if(network){
-        out$igraph <- build.igraph(tt.info, out)
+        out$igraph <- build.igraph(generator, out)
       }
 
       results[[i]] <- out
@@ -370,17 +374,17 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
     return(results)
   }
-  stop("Unknown tt.info$type")
+  stop("Unknown generator$type")
 }
 
 
 .basic.down.phase <- function(tree, node, result.vector, info){
-  if(node == getRoot(tree)){
+  if(node == phangorn::getRoot(tree)){
     result.vector[node] <- sample(1:length(tree$tip.label), 1, prob=info[[node]]$v)
   } else {
-    parent.choice <- result.vector[Ancestors(tree, node, type="parent")]
+    parent.choice <- result.vector[phangorn::Ancestors(tree, node, type="parent")]
 
-    desc.tips <- unlist(Descendants(tree, node))
+    desc.tips <- unlist(phangorn::Descendants(tree, node))
 
     if(parent.choice %in% desc.tips){
       result.vector[node] <- parent.choice
@@ -391,7 +395,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       result.vector[node] <- sample(1:length(tree$tip.label),1,prob=host.weights)
     }
   }
-  for(child in Children(tree, node)){
+  for(child in phangorn::Children(tree, node)){
     result.vector <- .basic.down.phase(tree, child, result.vector, info)
   }
   return(result.vector)
@@ -399,9 +403,9 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
 .unsampled.down.phase <- function(tree, node, result.vector, info, us.count){
   #  cat("At node",node,"with",us.count,"remaining unsampled regions\n")
-  kids <- Children(tree, node)
+  kids <- phangorn::Children(tree, node)
   vmatrix <- info[[node]]$v
-  if(node == getRoot(tree)){
+  if(node ==  phangorn::getRoot(tree)){
 
     prob.weights <- vmatrix[,us.count+1]
 
@@ -416,9 +420,9 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
     result.vector[node] <- result
 
   } else {
-    parent.choice <- result.vector[Ancestors(tree, node, type="parent")]
+    parent.choice <- result.vector[phangorn::Ancestors(tree, node, type="parent")]
 
-    desc.tips <- unlist(Descendants(tree, node))
+    desc.tips <- unlist(phangorn::Descendants(tree, node))
 
     if(parent.choice %in% desc.tips){
       result <- parent.choice
@@ -483,7 +487,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
         # Otherwise
         i.weights <- sapply(0:us.count, function(i){
           j <- us.count - i
-          if(result %in% unlist(Descendants(tree, kids[1], type="tips"))){
+          if(result %in% unlist(phangorn::Descendants(tree, kids[1], type="tips"))){
             possibilities <- info[[kids[1]]]$v[result, i+1]*info[[kids[2]]]$pstar[j+1]
           } else {
             possibilities <- info[[kids[2]]]$v[result, j+1]*info[[kids[1]]]$pstar[i+1]
@@ -511,12 +515,12 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
 
 .height.aware.down.phase <- function(tree, node, result.vector, info, height.limits){
-  if(node == getRoot(tree)){
+  if(node == phangorn::getRoot(tree)){
     result.vector[node] <- sample(1:length(tree$tip.label), 1, prob=info[[node]]$v)
   } else {
-    parent.choice <- result.vector[Ancestors(tree, node, type="parent")]
+    parent.choice <- result.vector[phangorn::Ancestors(tree, node, type="parent")]
 
-    desc.tips <- unlist(Descendants(tree, node))
+    desc.tips <- unlist(phangorn::Descendants(tree, node))
 
     if(parent.choice %in% desc.tips){
       result.vector[node] <- parent.choice
@@ -528,7 +532,7 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       result.vector[node] <- sample(1:length(tree$tip.label),1,prob=host.weights)
     }
   }
-  for(child in Children(tree, node)){
+  for(child in phangorn::Children(tree, node)){
     result.vector <- .height.aware.down.phase(tree, child, result.vector, info, height.limits)
   }
   return(result.vector)
@@ -536,12 +540,12 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
 
 .multiply.sampled.down.phase <- function(tree, node, result.vector, info, bridge){
-  if(node == getRoot(tree)){
-    result.vector[node] <- sample(1:length(unique(na.omit(bridge))), 1, prob=info[[node]]$v)
+  if(node == phangorn::getRoot(tree)){
+    result.vector[node] <- sample(1:length(unique(stats::na.omit(bridge))), 1, prob=info[[node]]$v)
   } else {
 
-    parent.choice <- result.vector[Ancestors(tree, node, type="parent")]
-    desc.tips <- unlist(Descendants(tree, node))
+    parent.choice <- result.vector[phangorn::Ancestors(tree, node, type="parent")]
+    desc.tips <- unlist(phangorn::Descendants(tree, node))
 
     if(parent.choice %in% bridge[desc.tips]){
       result.vector[node] <- parent.choice
@@ -550,80 +554,13 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
       host.weights[parent.choice] <- info[[node]]$pstar - info[[node]]$p
 
-      result.vector[node] <- sample(1:length(unique(na.omit(bridge))),1,prob=host.weights)
+      result.vector[node] <- sample(1:length(unique(stats::na.omit(bridge))),1,prob=host.weights)
     }
   }
-  for(child in Children(tree, node)){
+  for(child in phangorn::Children(tree, node)){
     result.vector <- .multiply.sampled.down.phase(tree, child, result.vector, info, bridge)
   }
   return(result.vector)
 }
 
-draw.fully.sampled <- function(tt.info, sample){
 
-  tree <- tt.info$tree
-
-  annots <- tt.info$hosts[sample$annotations]
-
-  first.in.split <- sapply(1:node.count(tree), function(x) {
-    if(getRoot(tree) == x){
-      return(T)
-    }
-    if(annots[x] == annots[Ancestors(tree, x, type="parent")]){
-      return(F)
-    }
-    return(T)
-  })
-
-  branch.colour.annots <- annots
-  branch.colour.annots[which(first.in.split)] <- NA
-
-  attr(tree, "annots") <- annots
-  attr(tree, "branch.colour.annots") <- branch.colour.annots
-
-  picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
-    geom_tiplab(aes(col=annots), hjust=-1) +
-    geom_point(aes(col=annots), size=4) +
-    scale_fill_hue(na.value = "grey") +
-    scale_color_hue(na.value = "grey")
-
-  picture
-}
-
-draw.incompletely.sampled <- function(tt.info, sample){
-  node.annots <- tt.info$hosts[sample$annotations]
-  branch.annots <- sample$hidden
-  tree <- tt.info$tree
-
-  first.in.split <- sapply(1:node.count(tree), function(x) {
-    if(getRoot(tree) == x){
-      return(T)
-    }
-    if(node.annots[x] == node.annots[Ancestors(tree, x, type="parent")]){
-      return(F)
-    }
-    return(T)
-  })
-
-  branch.colour.annots <- node.annots
-  branch.colour.annots[which(first.in.split)] <- NA
-
-  branch.annots[which(!first.in.split)] <- NA
-
-  adjustments <- rep(0.5, node.count(tree))
-  adjustments[getRoot(tree)] <- 1.5
-
-  attr(tree, "node.annots") <- node.annots
-  attr(tree, "branch.colour.annots") <- branch.colour.annots
-  attr(tree, "branch.annots") <- branch.annots
-  attr(tree, "adjustments") <- adjustments
-
-  picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
-    geom_tiplab(aes(col=node.annots), hjust=-1) +
-    geom_point(aes(col=node.annots), size=4) +
-    scale_fill_hue(na.value = "grey") +
-    scale_color_hue(na.value = "grey") +
-    geom_text(aes(x=branch, label=branch.annots, hjust=adjustments), vjust=-0.5, col="black", na.rm=TRUE)
-
-  return(picture)
-}

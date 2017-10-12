@@ -32,6 +32,8 @@
 #' }
 #' }
 #' }
+#' @export tt.generator
+#' @import phangorn
 
 
 tt.generator <- function(tree,
@@ -41,7 +43,7 @@ tt.generator <- function(tree,
                        maximum.heights = NULL,
                        tip.map = NULL){
 
-  if(!is.binary(tree)){
+  if(!ape::is.binary(tree)){
     stop("Binary trees only!\n")
   }
 
@@ -80,7 +82,7 @@ tt.generator <- function(tree,
 
     height.limits <- cbind(minimum.heights, maximum.heights)
 
-    results <- .height.aware.up.phase(tree, getRoot(tree), list(), height.limits)
+    results <- .height.aware.up.phase(tree, phangorn::getRoot(tree), list(), height.limits)
 
     type <- "height.aware"
 
@@ -95,7 +97,7 @@ tt.generator <- function(tree,
       }
     )
 
-    results <- .multiply.sampled.up.phase(tree, getRoot(tree), list(), bridge)
+    results <- .multiply.sampled.up.phase(tree, phangorn::getRoot(tree), list(), bridge)
 
     type <- "multisampled"
 
@@ -107,7 +109,7 @@ tt.generator <- function(tree,
       hosts <- c(tree$tip.label, paste("uh", 1:max.unsampled, sep=""))
     }
 
-    results <- .up.phase(tree, getRoot(tree), list(), max.unsampled)
+    results <- .up.phase(tree, phangorn::getRoot(tree), list(), max.unsampled)
 
     # Temporarily, convert to the expected format for zero unsampled hosts. This will go in the upcoming version where all variations are possible at once.
 
@@ -124,7 +126,7 @@ tt.generator <- function(tree,
     }
   }
 
-  out <- list(tree = tree, hosts = hosts, tt.count = results[[getRoot(tree)]]$p, height.limits = height.limits, bridge = bridge, type=type, node.calculations = results)
+  out <- list(tree = tree, hosts = hosts, tt.count = results[[phangorn::getRoot(tree)]]$p, height.limits = height.limits, bridge = bridge, type=type, node.calculations = results)
 
   class(out) <- append(class(out), "tt.generator")
 
@@ -154,7 +156,7 @@ tt.generator <- function(tree,
     node.calculations[[node]] <- node.info
 
   } else {
-    for(child in Children(tree, node)){
+    for(child in phangorn::Children(tree, node)){
       node.calculations <- .up.phase(tree, child, node.calculations, max.unsampled)
     }
 
@@ -175,9 +177,9 @@ tt.generator <- function(tree,
         out <- 0
         for(i in 0:remaining.us.elements){
           j = remaining.us.elements - i
-          children <- Children(tree,node)
+          phangorn::Children <- phangorn::Children(tree,node)
 
-          term <- node.calculations[[children[1]]]$pstar[i+1] * node.calculations[[children[2]]]$pstar[j+1]
+          term <- node.calculations[[phangorn::Children[1]]]$pstar[i+1] * node.calculations[[phangorn::Children[2]]]$pstar[j+1]
           out <- out + term
         }
         return(out)
@@ -187,7 +189,7 @@ tt.generator <- function(tree,
     node.info$pu <- v[length(tree$tip.label) + 1,]
 
     # the rest of the rows
-    kids <- Children(tree,node)
+    kids <- phangorn::Children(tree,node)
 
     for(host in 1:length(tree$tip.label)){
       temp <- sapply(0:max.unsampled, function(x){
@@ -246,7 +248,7 @@ tt.generator <- function(tree,
     node.calculations[[node]] <- node.info
 
   } else {
-    for(child in Children(tree, node)){
+    for(child in phangorn::Children(tree, node)){
       node.calculations <- .height.aware.up.phase(tree, child, node.calculations, height.limits)
     }
 
@@ -255,10 +257,10 @@ tt.generator <- function(tree,
     v <- rep(0, length(tree$tip.label))
     pstarprod <- rep(1, length(tree$tip.label))
 
-    kids <- Children(tree,node)
+    kids <- phangorn::Children(tree,node)
 
     for(kid in kids){
-      desc.tips <- unlist(Descendants(tree, kid, type="tips"))
+      desc.tips <- unlist(phangorn::Descendants(tree, kid, type="tips"))
       v[desc.tips] <- node.calculations[[kid]]$v[desc.tips]
 
       for(kid2 in kids){
@@ -291,7 +293,7 @@ tt.generator <- function(tree,
 
     node.info <- list()
 
-    v <- rep(0, length(unique(na.omit(bridge))))
+    v <- rep(0, length(unique(stats::na.omit(bridge))))
     v[bridge[node]] <- 1
 
     node.info$v <- v
@@ -300,19 +302,19 @@ tt.generator <- function(tree,
     node.calculations[[node]] <- node.info
 
   } else {
-    for(child in Children(tree, node)){
+    for(child in phangorn::Children(tree, node)){
       node.calculations <- .multiply.sampled.up.phase(tree, child, node.calculations, bridge)
     }
 
     node.info <- list()
 
-    v <- rep(0, length(unique(na.omit(bridge))))
+    v <- rep(0, length(unique(stats::na.omit(bridge))))
     pstarprod <- 1
 
-    kids <- Children(tree,node)
+    kids <- phangorn::Children(tree,node)
 
-    desc.tips.1 <- unlist(Descendants(tree, kids[1], type="tips"))
-    desc.tips.2 <- unlist(Descendants(tree, kids[2], type="tips"))
+    desc.tips.1 <- unlist(phangorn::Descendants(tree, kids[1], type="tips"))
+    desc.tips.2 <- unlist(phangorn::Descendants(tree, kids[2], type="tips"))
     if(length(intersect(bridge[desc.tips.1], bridge[desc.tips.2]))==1){
       # this is the situation where this is the top of a bridge
 
@@ -321,7 +323,7 @@ tt.generator <- function(tree,
       v[only.valid.host] <- node.calculations[[kids[1]]]$v[only.valid.host] * node.calculations[[kids[2]]]$v[only.valid.host]
 
     } else {
-      for(host.no in 1:max(na.omit(bridge))){
+      for(host.no in 1:max(stats::na.omit(bridge))){
         if(!is.na(bridge[node]) & bridge[node] != host.no){
           v[host.no] <- 0
         } else if(host.no %in% bridge[desc.tips.1]){
@@ -359,7 +361,7 @@ tt.generator <- function(tree,
         if(current.node == mrca){
           break
         }
-        current.node <- Ancestors(tree, current.node, type="parent")
+        current.node <- phangorn::Ancestors(tree, current.node, type="parent")
         if(!is.na(bridge[current.node])){
           if(bridge[current.node] ==  which(hosts==host)){
             break

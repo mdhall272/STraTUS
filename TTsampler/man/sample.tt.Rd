@@ -4,14 +4,14 @@
 \alias{sample.tt}
 \title{Sample one or more transmission trees uniformly}
 \usage{
-sample.tt(tt.info, count = 1, unsampled = 0, draw = F, network = F)
+sample.tt(generator, count = 1, unsampled = 0, draw = F, network = F)
 }
 \arguments{
-\item{tt.info}{A list of class \code{tt.generator} produced by \code{tt.sampler}.}
+\item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}
 
 \item{count}{How many transmission trees to sample.}
 
-\item{unsampled}{The number of unsampled hosts in the transmission chain. A value >0 requires a \code{tt.info} list whose \code{type} is \code{unsampled}.}
+\item{unsampled}{The number of unsampled hosts in the transmission chain. A value >0 requires a \code{generator} list whose \code{type} is \code{unsampled}.}
 
 \item{draw}{Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overlaid onto the phylogeny.}
 
@@ -20,7 +20,7 @@ sample.tt(tt.info, count = 1, unsampled = 0, draw = F, network = F)
 \value{
 A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 \itemize{
-\item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
+\item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
 \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
 \item{\code{picture}}{ Present if \code{draw} was specified; a \code{ggtree} object.}
 \item{\code{igraph}}{ Present if \code{network} was specified; an \code{igraph} object.}
