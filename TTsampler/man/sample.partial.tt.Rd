@@ -9,7 +9,7 @@ sample.partial.tt(generator, count = 1, unsampled = 0,
   check.integrity = T, draw = F, network = F)
 }
 \arguments{
-\item{generator}{A list of class \code{tt.generator} produced by \code{tt.sampler}.}
+\item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}
 
 \item{count}{How many transmission trees to sample.}
 

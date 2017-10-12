@@ -23,7 +23,7 @@ sample.tt <- function(generator, count = 1, unsampled = 0, draw = F, network = F
 
 #' Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed
 #'
-#' @param generator A list of class \code{tt.generator} produced by \code{tt.sampler}.
+#' @param generator A list of class \code{tt.generator} produced by \code{tt.generator}.
 #' @param count How many transmission trees to sample.
 #' @param unsampled The number of unsampled hosts in the transmission chain. (The whole transmission chain, even if only part of the transmission tree is being resampled). A value >0 requires a \code{generator} list whose \code{type} is \code{unsampled}.
 #' @param existing An existing list of class \code{tt}, representing a transmission tree to be modified. Usually these are produced by a \code{sample.tt} or \code{sample.partial.tt} call.
