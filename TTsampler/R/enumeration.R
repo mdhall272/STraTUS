@@ -1,11 +1,11 @@
 
 #' Enumerate transmission trees for the given pathogen phylogeny, and provide a uniform sample generator
 #'
-#' This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees.
+#' This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees. Note that at present, no combinations of variations (unsampled hosts, multiply-sampled hosts, and time constraints) are supported.
 #' @param tree A \code{phylo} object
 #' @param infectiousness.ends If this is TRUE, infectiousness is assumed to end with the last sampling time of each host. Incompatible with a specified \code{minimum.heights}.
 #' @param max.unsampled The maximum number of unsampled hosts in the transmission chain. The default is 0.
-#' @param minimum.heights A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. If \code{s} is given instead, these are automatically set to the height of the last tip from eah host, which enforces noninfectiousness at the time of the last sample.
+#' @param minimum.heights A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host.
 #' @param maximum.heights A vector with the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host.
 #' @param tip.map A vector with the same length as the tip set of the tree listing a string giving the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.
 #' @return A list of class \code{tt.info} with the following fields:
