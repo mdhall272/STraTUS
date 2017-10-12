@@ -81,9 +81,6 @@ build.igraph <- function(generator, sample){
   node.names <- generator$hosts
   parent.names <- sapply(parents, function(x) if(x==0) "root" else generator$hosts[x])
 
-  print(node.names)
-  print(parent.names)
-
   edgelist <- cbind(parent.names, node.names)
 
   return(igraph::graph_from_edgelist(edgelist))
