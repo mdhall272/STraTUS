@@ -9,7 +9,7 @@ draw.incompletely.sampled(generator, sample)
 \arguments{
 \item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}
 
-\item{sample}{A list of class \code{tt.sample} produced by \code{sample.tt} or \code{sample.partial.tt}}
+\item{sample}{A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}}
 }
 \value{
 A \code{ggtree} object

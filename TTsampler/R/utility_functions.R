@@ -23,7 +23,7 @@ get.node.height <- function(tree, node){
 #' For a sample, produce the transmission tree as a \code{igraph} object
 #'
 #' @param generator A list of class \code{tt.generator} produced by \code{tt.generator}.
-#' @param sample A list of class \code{tt.sample} produced by \code{sample.tt} or \code{sample.partial.tt}
+#' @param sample A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}
 #' @return An \code{igraph} object
 #' @export build.igraph
 #' @import igraph
@@ -93,7 +93,7 @@ build.igraph <- function(generator, sample){
 #' For a sample with no unsampled hosts, draw the annotated phylogeny using \code{ggtree}
 #'
 #' @param generator A list of class \code{tt.generator} produced by \code{tt.generator}.
-#' @param sample A list of class \code{tt.sample} produced by \code{sample.tt} or \code{sample.partial.tt}
+#' @param sample A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}
 #' @return A \code{ggtree} object
 #' @export draw.fully.sampled
 #' @import ggtree
@@ -137,7 +137,7 @@ draw.fully.sampled <- function(generator, sample){
 #' For a sample with unsampled hosts, draw the annotated phylogeny using \code{ggtree}
 #'
 #' @param generator A list of class \code{tt.generator} produced by \code{tt.generator}.
-#' @param sample A list of class \code{tt.sample} produced by \code{sample.tt} or \code{sample.partial.tt}
+#' @param sample A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}
 #' @return A \code{ggtree} object
 #' @export draw.incompletely.sampled
 #' @import ggtree
