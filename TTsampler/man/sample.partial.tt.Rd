@@ -30,8 +30,8 @@ A list, each of whose elements is a list of class \code{tt} with one or more of 
 \itemize{
 \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
 \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
-\item{\code{picture}}{ Present if \code{draw} was specified; a \code{ggtree} object.}
-\item{\code{igraph}}{ Present if \code{network} was specified; an \code{igraph} object.}
+\item{\code{picture}}{ Present if \code{draw} was TRUE; a \code{ggtree} object.}
+\item{\code{igraph}}{ Present if \code{network} was TRUE; an \code{igraph} object.}
 }
 }
 \description{
