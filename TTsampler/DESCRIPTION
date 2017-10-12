@@ -7,3 +7,4 @@ Depends: R (>= 3.4.1), ape, igraph, gtools
 Suggests: ggtree
 License: GPL
 Encoding: UTF-8
+RoxygenNote: 6.0.1

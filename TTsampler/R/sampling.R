@@ -4,12 +4,14 @@
 #' @param tt.info A list of class \code{tt.generator} produced by \code{tt.sampler}.
 #' @param count How many transmission trees to sample.
 #' @param unsampled The number of unsampled hosts in the transmission chain. A value >0 requires a \code{tt.info} list whose \code{type} is \code{unsampled}.
-#' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overload onto the phylogeny.
+#' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overlaid onto the phylogeny.
+#' @param network Produce the transmission trees in \code{igraph} format.
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
-#' \item{"annotations"}{Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
-#' \item{"hidden"}{Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
-#' \item{"picture"}{Present if \code{draw} was specified; a \code{ggtree} object.}
+#' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
+#' \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
+#' \item{\code{picture}}{ Present if \code{draw} was specified; a \code{ggtree} object.}
+#' \item{\code{igraph}}{ Present if \code{network} was specified; an \code{igraph} object.}
 #' }
 
 
@@ -26,11 +28,13 @@ sample.tt <- function(tt.info, count = 1, unsampled = 0, draw = F, network = F){
 #' @param starting.node The root of the subtree to resample. If this is the root of the whole tree, then \code{existing} is irrelevent (but generally \code{sample.tt} should be used for this purpose).
 #' @param check.integrity Whether to check if \code{existing} is indeed a valid transmission tree.
 #' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overload onto the phylogeny
+#' @param network Produce the transmission trees in \code{igraph} format.
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
-#' \item{"annotations"}{Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
-#' \item{"hidden"}{Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
-#' \item{"picture"}{Present if \code{draw} was specified; a \code{ggtree} object.}
+#' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{tt.info$hosts}) is assigned to each phylogeny node.}
+#' \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
+#' \item{\code{picture}}{ Present if \code{draw} was specified; a \code{ggtree} object.}
+#' \item{\code{igraph}}{ Present if \code{network} was specified; an \code{igraph} object.}
 #' }
 
 sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node = getRoot(tt.info$tree), existing=NULL, check.integrity = T, draw = F, network = F){
@@ -126,6 +130,13 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       })
     }
 
+    if(network){
+      results <- lapply(results, function(x){
+        x$igraph <- build.igraph(tt.info, x)
+        x
+      })
+    }
+
     return(results)
   }
   if(tt.info$type=="multisampled"){
@@ -149,6 +160,13 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
       })
     }
 
+    if(network){
+      results <- lapply(results, function(x){
+        x$igraph <- build.igraph(tt.info, x)
+        x
+      })
+    }
+
     return(results)
   }
   if(tt.info$type=="height.aware"){
@@ -168,6 +186,13 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
     if(draw){
       results <- lapply(results, function(x){
         x$picture <- draw.fully.sampled(tt.info, x)
+        x
+      })
+    }
+
+    if(network){
+      results <- lapply(results, function(x){
+        x$igraph <- build.igraph(tt.info, x)
         x
       })
     }
@@ -333,6 +358,10 @@ sample.partial.tt <- function(tt.info, count = 1, unsampled = 0, starting.node =
 
       if(draw){
         out$picture <- draw.incompletely.sampled(tt.info, out)
+      }
+
+      if(network){
+        out$igraph <- build.igraph(tt.info, out)
       }
 
       results[[i]] <- out

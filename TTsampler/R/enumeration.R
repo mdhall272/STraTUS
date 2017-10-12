@@ -1,7 +1,7 @@
 
-#' Enumerate transmission trees for the given pathogen phylogeny
+#' Enumerate transmission trees for the given pathogen phylogeny, and provide a uniform sample generator
 #'
-#' This function produces a list of class \code{tt.info} which can be used to randomly sample transmission trees for the input phylogeny
+#' This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees.
 #' @param tree A \code{phylo} object
 #' @param infectiousness.ends If this is TRUE, infectiousness is assumed to end with the last sampling time of each host. Incompatible with a specified \code{minimum.heights}.
 #' @param max.unsampled The maximum number of unsampled hosts in the transmission chain. The default is 0.
@@ -10,31 +10,31 @@
 #' @param tip.map A vector with the same length as the tip set of the tree listing a string giving the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.
 #' @return A list of class \code{tt.info} with the following fields:
 #' \itemize{
-#' \item{"tree"}{The input tree}
-#' \item{"tt.count"}{The total number of possible transmission trees}
-#' \item{"hosts"}{The vector of host names. The order of the elements of this vector is used in the output of \code{sample.tt}.}
-#' \item{"height.limits"}{Height constraints only. A matrix giving maximum and minimum node heights, in two columns. Rows are ordered by the order of hosts given in the \code{host} field.}
-#' \item{"bridge"}{Multiple sampling only. A vector with the same length as the node set of the tree, dictating which nodes have their annotation forced by the tip annotations. Entries are host numbers for nodes whose annotation must be that host, and NA for nodes which can take multiple hosts.}
-#' \item{"type"}{The variation used; \code{height.aware} if height constraints were specified, \code{multisampled} if a \code{tip.map} was given, \code{unsampled} if \code{max.unsampled} is greater than zero, \code{basic} otherwise.}
-#' \item{"node.calculations"}{A list with the same length as the number of nodes of the tree and whose entries are indexed in the same order. If \code{max.unsampled} is 0, each has the following fields (the terminology here comes from the Hall paper):
+#' \item{\code{tree}}{ The input tree}
+#' \item{\code{tt.count}}{ The total number of possible transmission trees}
+#' \item{\code{hosts}}{ The vector of host names. The order of the elements of this vector is used in the output of \code{sample.tt}.}
+#' \item{\code{height.limits}}{ Height constraints only. A matrix giving maximum and minimum node heights, in two columns. Rows are ordered by the order of hosts given in the \code{host} field.}
+#' \item{\code{bridge}}{ Multiple sampling only. A vector with the same length as the node set of the tree, dictating which nodes have their annotation forced by the tip annotations. Entries are host numbers for nodes whose annotation must be that host, and NA for nodes which can take multiple hosts.}
+#' \item{\code{type}}{ The variation used; \code{height.aware} if height constraints were specified, \code{multisampled} if a \code{tip.map} was given, \code{unsampled} if \code{max.unsampled} is greater than zero, \code{basic} otherwise.}
+#' \item{\code{node.calculations}}{ A list with the same length as the number of nodes of the tree and whose entries are indexed in the same order. If \code{max.unsampled} is 0, each has the following fields (the terminology here comes from the Hall paper):
 #' \itemize{
-#' \item{"p"}{The number of valid partitions of the subtree rooted at this node.}
-#' \item{"pstar"}{The number of valid partitions of the unrooted tree obtained by attaching a single extra tip to the root node of the subtree rooted at this node. Alternatively, if any height constraints are given, a vector of the same length as the set of hosts, giving the number of partitions of the unrooted tree if the extra partition element is subject to the same minimum (but not maximum) height constraint as each host in turn.}
-#' \item{"v"}{A list indexed by the set of hosts, whose entries are the number of valid partitions of the subtree rooted at this node where the root node is in the partition element from each host.}
+#' \item{\code{p}}{ The number of valid partitions of the subtree rooted at this node.}
+#' \item{\code{pstar}}{ The number of valid partitions of the unrooted tree obtained by attaching a single extra tip to the root node of the subtree rooted at this node. Alternatively, if any height constraints are given, a vector of the same length as the set of hosts, giving the number of partitions of the unrooted tree if the extra partition element is subject to the same minimum (but not maximum) height constraint as each host in turn.}
+#' \item{\code{v}}{ A list indexed by the set of hosts, whose entries are the number of valid partitions of the subtree rooted at this node where the root node is in the partition element from each host.}
 #' }
 #' Alternatively, if \code{max.unsampled} is greater than 0, the entries are:
 #' \itemize{
-#' \item{"p"}{A vector of length 1 + \code{max.unsampled} giving the number of valid partitions of the subtree rooted at this node if there are between 0 and \code{max.unsampled} (in order) partition elements containing no tips.}
-#' \item{"pstar"}{A vector of length 1 + \code{max.unsampled} giving the number of valid partitions of the tree obtained from the subtree rooted at this node by adding an extra tip connected to the root node, if there are between 0 and \code{max.unsampled} (in order) partition elements containing no tips.}
-#' \item{"ps"}{As with \code{p}, except this counts only partitions that have the root node in a sampled component (one containing at least one tip).}
-#' \item{"pu"}{As with \code{p}, except this counts only partitions that have the have the root node in an unsampled component (one containing no tip).}
-#' \item{"v"}{A list indexed by the set of hosts and "unsampled", whose entries are, for each host and an unsampled host, a vector of length 1 + \code{max.unsampled} counting the number of partitions that have the root node in that host's component if there are between 0 and \code{max.unsampled} partition elements containing no tips.}
+#' \item{\code{p}}{ A vector of length 1 + \code{max.unsampled} giving the number of valid partitions of the subtree rooted at this node if there are between 0 and \code{max.unsampled} (in order) partition elements containing no tips.}
+#' \item{\code{pstar}}{ A vector of length 1 + \code{max.unsampled} giving the number of valid partitions of the tree obtained from the subtree rooted at this node by adding an extra tip connected to the root node, if there are between 0 and \code{max.unsampled} (in order) partition elements containing no tips.}
+#' \item{\code{ps}}{ As with \code{p}, except this counts only partitions that have the root node in a sampled component (one containing at least one tip).}
+#' \item{\code{pu}}{ As with \code{p}, except this counts only partitions that have the have the root node in an unsampled component (one containing no tip).}
+#' \item{\code{v}}{ A list indexed by the set of hosts and "unsampled", whose entries are, for each host and an unsampled host, a vector of length 1 + \code{max.unsampled} counting the number of partitions that have the root node in that host's component if there are between 0 and \code{max.unsampled} partition elements containing no tips.}
 #' }
 #' }
 #' }
 
 
-tt.sampler <- function(tree,
+tt.generator <- function(tree,
                        max.unsampled = 0,
                        infectiousness.ends = F,
                        minimum.heights = NULL,
