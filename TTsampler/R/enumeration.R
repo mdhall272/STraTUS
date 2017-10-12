@@ -177,9 +177,9 @@ tt.generator <- function(tree,
         out <- 0
         for(i in 0:remaining.us.elements){
           j = remaining.us.elements - i
-          phangorn::Children <- phangorn::Children(tree,node)
+          kids <- phangorn::Children(tree,node)
 
-          term <- node.calculations[[phangorn::Children[1]]]$pstar[i+1] * node.calculations[[phangorn::Children[2]]]$pstar[j+1]
+          term <- node.calculations[[kids[1]]]$pstar[i+1] * node.calculations[[kids[2]]]$pstar[j+1]
           out <- out + term
         }
         return(out)
