@@ -3,7 +3,7 @@ This utility takes as input a phylogenetic tree and samples uniformly from the s
 
 It is primarily intended for those interested in exploring the structure of transmission tree space, and should not generally be used for phylodynamic inference.
 
-Both an R package and a UNIX command-line script (TTSamplerCommandLine.R) are provided. Documentation for the former is [here](https://github.com/mdhall272/TTsampler/blob/master/TTsampler/TTsampler.pdf). The latter will not be updated further, but is retained and has equal functionality at present (October 2017).
+Both an R package and a standalone R script for the command line (TTSamplerCommandLine.R) are provided. Documentation for the former is [here](https://github.com/mdhall272/TTsampler/blob/master/TTsampler/TTsampler.pdf). The latter will not be updated further, but is retained and has equal functionality at present (October 2017).
 
 TTSamplerCommandLine.R takes two compulsory arguments. The first should be the input tree in Newick format; it should be binary and since no manipulation is performed by the script, should be exactly the tree of interest. The second is simply a string identifying output files.
 
