@@ -1,5 +1,5 @@
 # TTsampler
-This utility takes as input a phylogenetic tree and samples uniformly from the set of possible transmission trees, as decscribed [here](http://www.biorxiv.org/content/early/2017/07/08/160812).
+This utility takes as input a phylogenetic tree and samples uniformly from the set of possible transmission trees, as described [here](http://www.biorxiv.org/content/early/2017/07/08/160812).
 
 It is primarily intended for those interested in exploring the structure of transmission tree space, and should not generally be used for phylodynamic inference.
 
