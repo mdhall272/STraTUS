@@ -14,7 +14,7 @@
 #' \item{\code{igraph}}{ Present if \code{network} was TRUE; an \code{igraph} object.}
 #' }
 #' @export sample.tt
-#' @import ggtree phangorn igraph
+#' @import ggtree phangorn 
 
 
 sample.tt <- function(generator, count = 1, unsampled = 0, draw = F, network = F){
@@ -39,7 +39,7 @@ sample.tt <- function(generator, count = 1, unsampled = 0, draw = F, network = F
 #' \item{\code{igraph}}{ Present if \code{network} was TRUE; an \code{igraph} object.}
 #' }
 #' @export sample.partial.tt
-#' @import ggtree phangorn igraph
+#' @import ggtree phangorn 
 
 sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node = phangorn::getRoot(generator$tree), existing=NULL, check.integrity = T, draw = F, network = F){
   if(!inherits(generator, "tt.generator")){

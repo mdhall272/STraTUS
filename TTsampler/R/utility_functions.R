@@ -26,7 +26,7 @@ get.node.height <- function(tree, node){
 #' @param sample A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}
 #' @return An \code{igraph} object
 #' @export build.igraph
-#' @import igraph
+#' @importFrom igraph graph_from_edgelist
 
 
 build.igraph <- function(generator, sample){
@@ -83,7 +83,7 @@ build.igraph <- function(generator, sample){
 
   edgelist <- cbind(parent.names, node.names)
 
-  return(igraph::graph_from_edgelist(edgelist))
+  return(graph_from_edgelist(edgelist))
 
 }
 

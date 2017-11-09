@@ -14,9 +14,9 @@ tt.generator(tree, max.unsampled = 0, infectiousness.ends = F,
 
 \item{infectiousness.ends}{If this is TRUE, infectiousness is assumed to end with the last sampling time of each host. Incompatible with a specified \code{minimum.heights}.}
 
-\item{minimum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed (unless \code{infectiousness.ends} is TRUE). Each must be equal to or smaller than the height of the last tip from the corresponding host.}
+\item{minimum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed (unless \code{infectiousness.ends} is TRUE). Each must be equal to or smaller than the height of the last tip from the corresponding host.}
 
-\item{maximum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host.}
+\item{maximum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host.}
 
 \item{tip.map}{A vector of the same length as the tip set of the tree listing a string giving the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.}
 }
