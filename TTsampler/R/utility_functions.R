@@ -77,9 +77,9 @@ build.edgelist <- function(generator, sample){
     }
   }
 
-  node.names <- generator$hosts
+  node.names <- generator$hosts[1:length(parents)]
   parent.names <- sapply(parents, function(x) if(x==0) "root" else generator$hosts[x])
-
+  
   edgelist <- cbind(parent.names, node.names)
   colnames(edgelist) <- c("parent", "child")
 
