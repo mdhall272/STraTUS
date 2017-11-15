@@ -25,11 +25,10 @@ get.node.height <- function(tree, node){
 #' @param generator A list of class \code{tt.generator} produced by \code{tt.generator}.
 #' @param sample A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}
 #' @return An \code{igraph} object
-#' @export build.igraph
-#' @importFrom igraph graph_from_edgelist
+#' @export build.edgelist
 
 
-build.igraph <- function(generator, sample){
+build.edgelist <- function(generator, sample){
 
   tree <- generator$tree
   annotations <- sample$annotations
@@ -82,8 +81,9 @@ build.igraph <- function(generator, sample){
   parent.names <- sapply(parents, function(x) if(x==0) "root" else generator$hosts[x])
 
   edgelist <- cbind(parent.names, node.names)
+  colnames(edgelist) <- c("parent", "child")
 
-  return(graph_from_edgelist(edgelist))
+  return(edgelist)
 
 }
 

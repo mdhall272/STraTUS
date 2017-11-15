@@ -5,20 +5,22 @@
 #' @param count How many transmission trees to sample.
 #' @param unsampled The number of unsampled hosts in the transmission chain. A value >0 requires a \code{generator} list whose \code{type} is \code{unsampled}.
 #' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overlaid onto the phylogeny.
-#' @param network Produce the transmission trees in \code{igraph} format.
+#' @param igraph Produce the transmission trees in \code{igraph} format.
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
 #' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
+#' \item{\code{edgelist}}{ Always present. A \code{data.frame} giving the edge list; the first column are parents and the second children.}
 #' \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
 #' \item{\code{picture}}{ Present if \code{draw} was TRUE; a \code{ggtree} object.}
-#' \item{\code{igraph}}{ Present if \code{network} was TRUE; an \code{igraph} object.}
+#' \item{\code{igraph}}{ Present if \code{igraph} was TRUE; an \code{igraph} object.}
 #' }
 #' @export sample.tt
 #' @import ggtree phangorn 
+#' @importFrom igraph graph_from_edgelist
 
 
-sample.tt <- function(generator, count = 1, unsampled = 0, draw = F, network = F){
-  return(sample.partial.tt(generator, count, unsampled, phangorn::getRoot(generator$tree),  NULL, F, draw, network))
+sample.tt <- function(generator, count = 1, unsampled = 0, draw = F, igraph = F){
+  return(sample.partial.tt(generator, count, unsampled, phangorn::getRoot(generator$tree),  NULL, F, draw, igraph))
 }
 
 #' Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed
@@ -30,18 +32,20 @@ sample.tt <- function(generator, count = 1, unsampled = 0, draw = F, network = F
 #' @param starting.node The root of the subtree to resample. If this is the root of the whole tree, then \code{existing} is irrelevent (but generally \code{sample.tt} should be used for this purpose).
 #' @param check.integrity Whether to check if \code{existing} is indeed a valid transmission tree.
 #' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overload onto the phylogeny
-#' @param network Produce the transmission trees in \code{igraph} format.
+#' @param igraph Produce the transmission trees in \code{igraph} format.
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
 #' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
+#' \item{\code{edgelist}}{ Always present. A \code{data.frame} giving the edge list; the first column are parents and the second children.}
 #' \item{\code{hidden}}{ Present if \code{unsampled} is greater than 0. The number of "hidden" unsampled hosts (with no associated nodes) along each branch.}
 #' \item{\code{picture}}{ Present if \code{draw} was TRUE; a \code{ggtree} object.}
-#' \item{\code{igraph}}{ Present if \code{network} was TRUE; an \code{igraph} object.}
+#' \item{\code{igraph}}{ Present if \code{igraph} was TRUE; an \code{igraph} object.}
 #' }
 #' @export sample.partial.tt
 #' @import ggtree phangorn 
+#' @importFrom igraph graph_from_edgelist
 
-sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node = phangorn::getRoot(generator$tree), existing=NULL, check.integrity = T, draw = F, network = F){
+sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node = phangorn::getRoot(generator$tree), existing=NULL, check.integrity = T, draw = F, igraph = F){
   if(!inherits(generator, "tt.generator")){
     stop("Input is not a list of class tt.generator")
   }
@@ -133,10 +137,15 @@ sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node
         x
       })
     }
-
-    if(network){
+    
+    results <- lapply(results, function(x){
+      x$edgelist <- build.edgelist(generator, x)
+      x
+    })
+    
+    if(igraph){
       results <- lapply(results, function(x){
-        x$igraph <- build.igraph(generator, x)
+        x$igraph <- graph_from_edgelist(x$edgelist)
         x
       })
     }
@@ -163,10 +172,15 @@ sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node
         x
       })
     }
+    
+    results <- lapply(results, function(x){
+      x$edgelist <- build.edgelist(generator, x)
+      x
+    })
 
-    if(network){
+    if(igraph){
       results <- lapply(results, function(x){
-        x$igraph <- build.igraph(generator, x)
+        x$igraph <- graph_from_edgelist(x$edgelist)
         x
       })
     }
@@ -194,9 +208,14 @@ sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node
       })
     }
 
-    if(network){
+    results <- lapply(results, function(x){
+      x$edgelist <- build.edgelist(generator, x)
+      x
+    })
+    
+    if(igraph){
       results <- lapply(results, function(x){
-        x$igraph <- build.igraph(generator, x)
+        x$igraph <- graph_from_edgelist(x$edgelist)
         x
       })
     }
@@ -364,8 +383,10 @@ sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node
         out$picture <- draw.incompletely.sampled(generator, out)
       }
 
-      if(network){
-        out$igraph <- build.igraph(generator, out)
+      out$edgelist <- build.edgelist(generator, out)
+      
+      if(igraph){
+        out$igraph <- graph_from_edgelist(out$edgelist)
       }
 
       results[[i]] <- out
