@@ -17,7 +17,7 @@ tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
 
 \item{max.sampling.to.noninfectious}{The greatest time period (in tree branch length units) that can have elapsed between a tip from a host appearing and that host becoming noninfectious. If this is 0, a host's infection ends at the time of its last tip. The default is infinity, meaning that no such time limit exists.}
 
-\item{minimum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. This overrides the given value of \code{max.sampling.to.nonifectious}.}
+\item{minimum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. This overrides the given value of \code{max.sampling.to.noninfectious}.}
 
 \item{maximum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host. This overrides the given value of \code{max.infection.to.sampling}.}
 
@@ -27,7 +27,7 @@ tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
 A list of class \code{tt.info} with the following fields:
 \itemize{
 \item{\code{tree}}{ The input tree}
-\item{\code{tt.count}}{ The total number of possible transmission trees}
+\item{\code{tt.count}}{The total number of possible transmission trees.}
 \item{\code{hosts}}{ The vector of host names. The order of the elements of this vector is used in the output of \code{sample.tt}.}
 \item{\code{height.limits}}{ Height constraints only. A matrix giving maximum and minimum node heights, in two columns. Rows are ordered by the order of hosts given in the \code{host} field.}
 \item{\code{bridge}}{ Multiple sampling only. A vector with the same length as the node set of the tree, dictating which nodes have their annotation forced by the tip annotations. Entries are host numbers for nodes whose annotation must be that host, and NA for nodes which can take multiple hosts.}
