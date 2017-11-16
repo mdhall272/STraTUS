@@ -49,6 +49,10 @@ sample.partial.tt <- function(generator, count = 1, unsampled = 0, starting.node
   if(!inherits(generator, "tt.generator")){
     stop("Input is not a list of class tt.generator")
   }
+  
+  if(generator$tt.count == 0){
+    stop("There are no valid transmission trees produced by this generator.")
+  }
 
   if(unsampled > 0 & generator$type != "unsampled"){
     stop("This sampler will not generate trees with unsampled hosts.")
