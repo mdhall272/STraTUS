@@ -12,7 +12,7 @@
 #' @return A list of class \code{tt.info} with the following fields:
 #' \itemize{
 #' \item{\code{tree}}{ The input tree}
-#' \item{\code{tt.count}}{ The total number of possible transmission trees}
+#' \item{\code{tt.count}}{The total number of possible transmission trees.}
 #' \item{\code{hosts}}{ The vector of host names. The order of the elements of this vector is used in the output of \code{sample.tt}.}
 #' \item{\code{height.limits}}{ Height constraints only. A matrix giving maximum and minimum node heights, in two columns. Rows are ordered by the order of hosts given in the \code{host} field.}
 #' \item{\code{bridge}}{ Multiple sampling only. A vector with the same length as the node set of the tree, dictating which nodes have their annotation forced by the tip annotations. Entries are host numbers for nodes whose annotation must be that host, and NA for nodes which can take multiple hosts.}
@@ -140,8 +140,10 @@ tt.generator <- function(tree,
       type <- "unsampled"
     }
   }
+  
+  tt.count = sum(results[[phangorn::getRoot(tree)]]$p)
 
-  out <- list(tree = tree, hosts = hosts, tt.count = results[[phangorn::getRoot(tree)]]$p, height.limits = height.limits, bridge = bridge, type=type, node.calculations = results)
+  out <- list(tree = tree, hosts = hosts, tt.count = tt.count, height.limits = height.limits, bridge = bridge, type=type, node.calculations = results)
 
   class(out) <- append(class(out), "tt.generator")
 
