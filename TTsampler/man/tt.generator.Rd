@@ -4,19 +4,22 @@
 \alias{tt.generator}
 \title{Enumerate transmission trees for the given pathogen phylogeny, and provide a uniform sample generator}
 \usage{
-tt.generator(tree, max.unsampled = 0, infectiousness.ends = F,
-  minimum.heights = NULL, maximum.heights = NULL, tip.map = NULL)
+tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
+  max.sampling.to.noninfectious = Inf, minimum.heights = NULL,
+  maximum.heights = NULL, tip.map = NULL)
 }
 \arguments{
 \item{tree}{A \code{phylo} object}
 
 \item{max.unsampled}{The maximum number of unsampled hosts in the transmission chain. The default is 0.}
 
-\item{infectiousness.ends}{If this is TRUE, infectiousness is assumed to end with the last sampling time of each host. Incompatible with a specified \code{minimum.heights}.}
+\item{max.infection.to.sampling}{The greatest time period (in tree branch length units) that can have elapsed between the infection of a host and a tip from that host appearing. The default is infinity, meaning that no such time limit exists.}
 
-\item{minimum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed (unless \code{infectiousness.ends} is TRUE). Each must be equal to or smaller than the height of the last tip from the corresponding host.}
+\item{max.sampling.to.noninfectious}{The greatest time period (in tree branch length units) that can have elapsed between a tip from a host appearing and that host becoming noninfectious. If this is 0, a host's infection ends at the time of its last tip. The default is infinity, meaning that no such time limit exists.}
 
-\item{maximum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host.}
+\item{minimum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. This overrides the given value of \code{max.sampling.to.nonifectious}.}
+
+\item{maximum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host. This overrides the given value of \code{max.infection.to.sampling}.}
 
 \item{tip.map}{A vector of the same length as the tip set of the tree listing a string giving the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.}
 }

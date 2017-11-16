@@ -3,10 +3,11 @@
 #'
 #' This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees. Note that at present, no combinations of variations (unsampled hosts, multiply-sampled hosts, and time constraints) are supported.
 #' @param tree A \code{phylo} object
-#' @param infectiousness.ends If this is TRUE, infectiousness is assumed to end with the last sampling time of each host. Incompatible with a specified \code{minimum.heights}.
 #' @param max.unsampled The maximum number of unsampled hosts in the transmission chain. The default is 0.
-#' @param minimum.heights A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed (unless \code{infectiousness.ends} is TRUE). Each must be equal to or smaller than the height of the last tip from the corresponding host.
-#' @param maximum.heights A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host.
+#' @param max.infection.to.sampling The greatest time period (in tree branch length units) that can have elapsed between the infection of a host and a tip from that host appearing. The default is infinity, meaning that no such time limit exists.
+#' @param max.sampling.to.noninfectious The greatest time period (in tree branch length units) that can have elapsed between a tip from a host appearing and that host becoming noninfectious. If this is 0, a host's infection ends at the time of its last tip. The default is infinity, meaning that no such time limit exists.
+#' @param minimum.heights A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. This overrides the given value of \code{max.sampling.to.noninfectious}.
+#' @param maximum.heights A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host. This overrides the given value of \code{max.infection.to.sampling}.
 #' @param tip.map A vector of the same length as the tip set of the tree listing a string giving the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.
 #' @return A list of class \code{tt.info} with the following fields:
 #' \itemize{
@@ -38,7 +39,8 @@
 
 tt.generator <- function(tree,
                        max.unsampled = 0,
-                       infectiousness.ends = F,
+                       max.infection.to.sampling = Inf,
+                       max.sampling.to.noninfectious = Inf,
                        minimum.heights = NULL,
                        maximum.heights = NULL,
                        tip.map = NULL){
@@ -47,11 +49,18 @@ tt.generator <- function(tree,
     stop("Binary trees only!\n")
   }
 
-  if(infectiousness.ends & !is.null(minimum.heights)){
-    stop("The universal infectiousness.ends argument is incompatible with individually-specified minimum heights")
+  if(max.infection.to.sampling < Inf & !is.null(maximum.heights)){
+    max.infection.to.sampling <- Inf
+    warning(paste0("Using the specified maximum heights vector; ignoring the specified value of max.infection.to.sampling (",max.infection.to.sampling,")"))
   }
+  
+  if(max.sampling.to.noninfectious < Inf & !is.null(minimum.heights)){
+    max.sampling.to.noninfectious <- Inf
+    warning(paste0("Using the specified minimum heights vector; ignoring the specified value of max.sampling.to.noninfectious (",max.sampling.to.noninfectious,")"))
+  }
+  
 
-  has.heights <- infectiousness.ends | !is.null(minimum.heights) | !is.null(maximum.heights)
+  has.heights <- max.infection.to.sampling<Inf | max.sampling.to.noninfectious<Inf | !is.null(minimum.heights) | !is.null(maximum.heights)
   has.unsampled <- max.unsampled > 0
   has.multisampled <- !is.null(tip.map)
 
@@ -66,9 +75,15 @@ tt.generator <- function(tree,
 
     hosts <- tree$tip.label
 
-    if(infectiousness.ends){
+    if(max.sampling.to.noninfectious < Inf){
       minimum.heights <- sapply(1:length(tree$tip.label), function(x) {
-        get.node.height(tree, x)
+        get.node.height(tree, x) - max.sampling.to.noninfectious
+      })
+    }
+    
+    if(max.infection.to.sampling < Inf){
+      maximum.heights <- sapply(1:length(tree$tip.label), function(x) {
+        get.node.height(tree, x) + max.infection.to.sampling
       })
     }
 
