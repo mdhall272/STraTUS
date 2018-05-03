@@ -6,6 +6,19 @@ is.tip <- function(tree, node) {
   return(node <= length(tree$tip.label))
 }
 
+divide.k.into.n <- function(k, n){
+  if(n==1){
+    return(k)
+  } else {
+    temp <- lapply(0:k, function(i){
+      # i objects go in the first bin
+      ncols <- choose(n+k-2-i, n-2)
+      return(rbind(rep(i, ncols), divide.k.into.n(k-i, n-1)))
+    })
+    do.call(cbind, temp)
+  }
+}
+
 # mrca.phylo doesn't work on a single tip and we need that
 
 mrca.phylo.or.unique.tip <- function(tree, node) {
