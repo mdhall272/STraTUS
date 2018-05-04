@@ -155,9 +155,9 @@ draw.fully.sampled <- function(generator, sample){
 
 draw.incompletely.sampled <- function(generator, sample){
 
-  if(generator$type!="unsampled"){
-    stop("This generator does not use unsampled hosts.")
-  }
+  # if(generator$type!="unsampled"){
+  #   stop("This generator does not use unsampled hosts.")
+  # }
 
 
   node.annots <- generator$hosts[sample$annotations]
