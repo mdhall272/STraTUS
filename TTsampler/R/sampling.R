@@ -135,29 +135,37 @@ sample.partial.tt <- function(generator,
   
   if(starting.node!=phangorn::getRoot(tree)){
     
-    # these are all the unsampled hosts in the entire tree
-    
-    unsampled.nos <- seq(sampled.host.count + 1, sampled.host.count + unsampled)
-    
     subtree.nodes <- c(starting.node, unlist(phangorn::Descendants(tree, starting.node, type="all")))
     other.nodes <- setdiff(1:node.count(tree), subtree.nodes)
+    
+    # these are all the unsampled hosts in the entire tree
+    if(unsampled > 0){
+      unsampled.nos <- seq(sampled.host.count + 1, sampled.host.count + unsampled)
+    
+
     
     # We leave alone everything not involving the subtree rooted at starting.node.
     # Hidden hosts on the root branch of that ARE resampled (they have to be, because it may not end up an infection branch)
     # Existing unsampled hosts exist outside the subtree but can also exist inside it (if they creep down)
     # Only visible hosts have numbers
     
-    unsampled.nos.outside.subtree <- intersect(unsampled.nos, unique(existing.annot[other.nodes]))
-    
-    visible.existing.unsampled.hosts <- length(unsampled.nos.outside.subtree)
-    hidden.existing.unsampled.hosts <- sum(existing.hidden[other.nodes])
-    
-    existing.unsampled.hosts <- visible.existing.unsampled.hosts + hidden.existing.unsampled.hosts
-    
-    remaining.unsampled.hosts <- unsampled - existing.unsampled.hosts
-    
-    if(remaining.unsampled.hosts < 0){
-      stop(paste0("There are already more than ", unsampled, " unsampled hosts in the provided transmission tree"))
+      unsampled.nos.outside.subtree <- intersect(unsampled.nos, unique(existing.annot[other.nodes]))
+      
+      visible.existing.unsampled.hosts <- length(unsampled.nos.outside.subtree)
+      hidden.existing.unsampled.hosts <- sum(existing.hidden[other.nodes])
+      
+      existing.unsampled.hosts <- visible.existing.unsampled.hosts + hidden.existing.unsampled.hosts
+      
+      remaining.unsampled.hosts <- unsampled - existing.unsampled.hosts
+      
+      if(remaining.unsampled.hosts < 0){
+        stop(paste0("There are already more than ", unsampled, " unsampled hosts in the provided transmission tree"))
+      }
+    } else {
+      visible.existing.unsampled.hosts <- 0
+      hidden.existing.unsampled.hosts <- 0
+      existing.unsampled.hosts <- 0
+      remaining.unsampled.hosts <- 0
     }
     
     # this is just for numbering
