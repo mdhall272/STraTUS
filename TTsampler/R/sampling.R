@@ -51,7 +51,7 @@ sample.partial.tt <- function(generator,
                               starting.node = phangorn::getRoot(generator$tree), 
                               existing = NULL, 
                               check.integrity = T, 
-                              draw = F, 
+                              draw = count==1, 
                               igraph = F){
   
   
@@ -812,14 +812,16 @@ sample.partial.tt <- function(generator,
       new.pat.weights <- vmatrix[,us.count+1]
       
       if(!parent.unsampled){
-        continuation.weight <- info[[node]]$pstar[parent.choice, us.count+1] - info[[node]]$p[us.count+1]
-      } else {
         if(height.limits[parent.choice,1] <= get.node.height(tree, node)){
-          continuation.weight <- info[[node]]$pstar[sampled.host.count + 1, us.count+1] - info[[node]]$p[us.count+1]
+          continuation.weight <- info[[node]]$pstar[parent.choice, us.count+1] - info[[node]]$p[us.count+1]
         } else {
           # I _think_ this is redundant
           continuation.weight <- 0
         }
+      } else {
+        
+        continuation.weight <- info[[node]]$pstar[sampled.host.count + 1, us.count+1] - info[[node]]$p[us.count+1]
+
       }
 
       result <- sample(1:(sampled.host.count+2), 1, prob=c(new.pat.weights, continuation.weight))
