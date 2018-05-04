@@ -160,6 +160,8 @@ sample.partial.tt <- function(generator,
       stop(paste0("There are already more than ", unsampled, " unsampled hosts in the provided transmission tree"))
     }
     
+    # this is just for numbering
+    
     starting.current.host.count <- sampled.host.count + visible.existing.unsampled.hosts
     
     # Unpleasant as this seems, it is probably easiest to renumber the existing hosts.
@@ -189,6 +191,8 @@ sample.partial.tt <- function(generator,
     
     visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(sampled.host.count + remaining.unsampled.hosts - 1, sampled.host.count + x - 1))
     
+    subtree.sampled.host.count <- sampled.host.count
+    
   } else {
     
     parent.host <- existing.annot[phangorn::Ancestors(tree, starting.node, type="parent")]
@@ -214,7 +218,7 @@ sample.partial.tt <- function(generator,
       # the subtree which receive remaining.unsampled.hosts minus the column index.
       
       counts <- generator$node.calculations[[starting.node]]$pstar
-      visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(subtree.sampled.host.count + remaining.unsampled.hosts - 1, subtree.sampled.host.count + x - 1))
+      visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[parent.host,x+1]*choose(subtree.sampled.host.count + remaining.unsampled.hosts - 1, subtree.sampled.host.count + x - 1))
     }
     
   }
@@ -241,9 +245,9 @@ sample.partial.tt <- function(generator,
     branch.us.position.choice <- vector()
     if(no.visible != remaining.unsampled.hosts){
       if(!root.forced){
-        branch.us.position.options <- gtools::combinations(sampled.host.count + no.visible, no.hidden, repeats.allowed = T )
+        branch.us.position.options <- gtools::combinations(subtree.sampled.host.count + no.visible, no.hidden, repeats.allowed = T )
       } else {
-        branch.us.position.options <- gtools::combinations(sampled.host.count + no.visible - 1, no.hidden, repeats.allowed = T )
+        branch.us.position.options <- gtools::combinations(subtree.sampled.host.count + no.visible - 1, no.hidden, repeats.allowed = T )
       }
       branch.us.position.choice <- branch.us.position.options[sample(1:nrow(branch.us.position.options), 1),]
     }
@@ -272,7 +276,7 @@ sample.partial.tt <- function(generator,
     
     interventions[which(a.sample %in% need.new.ibs)] <- 0
     
-    for(host in 1:(sampled.host.count + no.visible)){
+    for(host in need.new.ibs){
       
       # find a node in this region
       a.node <- which(a.sample==host)[1]
