@@ -798,6 +798,10 @@ sample.partial.tt <- function(generator,
 
     prob.weights <- vmatrix[,us.count+1]
 
+    if(all(prob.weights==0)){
+      stop("No valid transmission trees for this configuration")
+    }
+    
     result <- sample(1:(sampled.host.count + 1), 1, prob = prob.weights)
     
     if(result == (sampled.host.count + 1)){
@@ -836,6 +840,10 @@ sample.partial.tt <- function(generator,
 
       }
 
+      if(all(c(new.pat.weights, continuation.weight)==0)){
+        stop("No valid transmission trees for this configuration")
+      }
+      
       result <- sample(1:(sampled.host.count+2), 1, prob=c(new.pat.weights, continuation.weight))
       
       creep <- F
@@ -883,7 +891,7 @@ sample.partial.tt <- function(generator,
         
         if(sum(column.weights) != (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])){
           
-          stop("Encountered miscalculation 1")
+          warning("Encountered miscalculation 1")
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=column.weights)]
@@ -901,7 +909,7 @@ sample.partial.tt <- function(generator,
         })
         
         if(sum(column.weights) != info[[node]]$pu[us.count + 1] ){
-          stop("Encountered miscalculation 2.")
+          warning("Encountered miscalculation 2.")
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=column.weights)]
@@ -926,7 +934,7 @@ sample.partial.tt <- function(generator,
         if(sum(column.weights) != info[[node]]$v[result, us.count + 1])  {
           # print(info)
           # 
-          stop("Encountered miscalculation 3.")
+          warning("Encountered miscalculation 3.")
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=column.weights)]
