@@ -469,7 +469,7 @@ tt.generator <- function(tree,
         v[host,] <- 0
       } else {
         
-        temp <- sapply(0:max.unsampled, function(x){
+        temp <- lapply(0:max.unsampled, function(x){
           out <- 0
           
           distribution.of.us <- divide.k.into.n(x, length(kids))
@@ -490,6 +490,8 @@ tt.generator <- function(tree,
           }
           return(out)
         })
+        
+        temp <- do.call(c, temp)
         
         v[host,] <- temp
       }
@@ -523,18 +525,10 @@ tt.generator <- function(tree,
       })
       do.call(c, ffs)
     })
-    print(pstar)
     
-    pstar <- do.call(c, pstar)
+    pstar <- do.call(rbind, pstar)
     
-    # grrr
-    
-    if(is.matrix(pstar)){
-      node.info$pstar <- t(pstar)
-    } else {
-      node.info$pstar <- as.matrix(pstar)
-    }
-    
+    node.info$pstar <- pstar
     node.info$v <- v
     node.calculations[[node]] <- node.info
   }
