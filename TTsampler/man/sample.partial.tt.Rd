@@ -6,7 +6,7 @@
 \usage{
 sample.partial.tt(generator, count = 1, unsampled = 0,
   starting.node = phangorn::getRoot(generator$tree), existing = NULL,
-  check.integrity = T, draw = F, igraph = F)
+  check.integrity = T, draw = count == 1, igraph = F)
 }
 \arguments{
 \item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}

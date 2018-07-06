@@ -4,14 +4,15 @@
 \alias{sample.tt}
 \title{Sample one or more transmission trees uniformly}
 \usage{
-sample.tt(generator, count = 1, unsampled = 0, draw = F, igraph = F)
+sample.tt(generator, count = 1, unsampled = 0, draw = count == 1,
+  igraph = F)
 }
 \arguments{
 \item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}
 
 \item{count}{How many transmission trees to sample.}
 
-\item{unsampled}{The number of unsampled hosts in the transmission chain. A value >0 requires a \code{generator} list whose \code{type} is \code{unsampled}.}
+\item{unsampled}{The number of unsampled hosts in the transmission chain.}
 
 \item{draw}{Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overlaid onto the phylogeny.}
 
