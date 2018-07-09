@@ -6,7 +6,7 @@
 \usage{
 sample.partial.tt(generator, count = 1, unsampled = 0,
   starting.node = phangorn::getRoot(generator$tree), existing = NULL,
-  check.integrity = T, draw = count == 1, igraph = F)
+  check.integrity = T, draw = count == 1, igraph = F, verbose = F)
 }
 \arguments{
 \item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}
@@ -24,6 +24,8 @@ sample.partial.tt(generator, count = 1, unsampled = 0,
 \item{draw}{Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overload onto the phylogeny}
 
 \item{igraph}{Produce the transmission trees in \code{igraph} format.}
+
+\item{verbose}{Verbose output}
 }
 \value{
 A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:

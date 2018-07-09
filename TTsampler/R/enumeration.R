@@ -34,7 +34,8 @@
 #' }
 #' }
 #' @export tt.generator
-#' @import phangorn gmp
+#' @import phangorn
+#' @importFrom gmp as.bigz is.bigz
 
 
 tt.generator <- function(tree,
@@ -363,7 +364,7 @@ tt.generator <- function(tree,
                               height.limits = cbind(rep(-Inf, length(tree$tip.label)+1), rep(Inf, length(tree$tip.label)+1)),
                               bridge = c(1:(length(tree$tip.label)), rep(NA, tree$Nnode)),
                               bigz = F){
-  
+
   nhosts <- length(unique(stats::na.omit(bridge)))
   
   if(is.tip(tree, node)){
@@ -393,9 +394,8 @@ tt.generator <- function(tree,
       v <- as.bigz(v)
       p <- as.bigz(p)
       pstar <- as.bigz(pstar)
-      
     } 
-    
+
     ps <- colSums.fixed(v[1:nhosts, , drop=F])
     
     node.info$v <- v
@@ -414,6 +414,7 @@ tt.generator <- function(tree,
       node.calculations <- .unified.up.phase(tree, child, node.calculations, max.unsampled, height.limits, bridge, bigz)
     }
     
+    
     node.info <- list()
     
     v <- matrix(0, nrow = nhosts + 1, ncol = max.unsampled + 1)
@@ -428,29 +429,32 @@ tt.generator <- function(tree,
       # never unsampled
       v[nhosts + 1, ] <- rep(0, max.unsampled + 1)
     } else {
-      v[nhosts + 1, ] <- do.call(c, lapply(0:max.unsampled, function(x){
+      temp <- do.call(c, lapply(0:max.unsampled, function(x){
         if(x==0){
-          return(0)
+          return(if(bigz) as.bigz(0) else 0)
         } else {
           # How many unsampled elements?
           
           # One element is accounted for at the root
           remaining.us.elements <- x - 1
-          
           out <- 0
-          
           distribution.of.us <- divide.k.into.n(remaining.us.elements, length(kids))
           
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
-              term <- term * node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1]
+              if(bigz){
+                term <- mul.bigz(term, node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1])
+              } else {
+                term <- term * node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1]
+              }
             }
             out <- out + term
           }
           return(out)
         }
       } ))
+      v[nhosts + 1, ] <- temp
     }
     
     node.info$pu <- v[nhosts + 1,]
@@ -465,47 +469,55 @@ tt.generator <- function(tree,
         # this node is in some other host's bridge
         v[host,] <- 0
       } else if(!(host %in% bridge[unlist(phangorn::Descendants(tree, node, type="tips"))] )){
-        # this host is not a tip of this subtree. THIS NEEDS TO BE IN THE PAPER
+        # this host is not a tip of this subtree. 
         v[host,] <- 0
       } else {
-        
         temp <- lapply(0:max.unsampled, function(x){
           out <- 0
-          
           distribution.of.us <- divide.k.into.n(x, length(kids))
-          
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
               desc.tips <- unlist(phangorn::Descendants(tree, kids[j], type="tips"))
-              
               if(host %in% bridge[desc.tips]){
                 # if child j is an ancestor of a tip from host
-                term <- term * node.calculations[[kids[j]]]$v[host, distribution.of.us[j,i]+1]
+                if(bigz){
+                  term <- mul.bigz(term, node.calculations[[kids[j]]]$v[host, distribution.of.us[j,i]+1])
+                } else {
+                  term <- term * node.calculations[[kids[j]]]$v[host, distribution.of.us[j,i]+1]
+                }
               } else {
-                term <- term * node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1]
+                if(bigz){
+                  term <- mul.bigz(term, node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1])
+                } else {
+                  term <- term * node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1]
+                }
               }
             }
             out <- out + term
           }
           return(out)
         })
-        
         temp <- do.call(c, temp)
-        
         v[host,] <- temp
       }
     }
     
     node.info$ps <- colSums.fixed(v[1:nhosts,, drop=F])
     
-    node.info$p <- node.info$pu + node.info$ps
+    p <- node.info$pu + node.info$ps
+    if(bigz){
+      p <- c(p)
+    }
+    
+    node.info$p <- p
     
     tips.lower <- height.limits[,1] <= get.node.height(tree,node)
     
     pstar <- lapply(1:(nhosts+1), function(x){
+
       ffs <- lapply(0:max.unsampled, function(y){
-        
+
         out <- node.info$p[y+1]
         
         # That's all she wrote if this is a bridge node or it is outside the height limits. Otherwise:
@@ -515,23 +527,32 @@ tt.generator <- function(tree,
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
-              term <- term * node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1]
+              if(bigz){
+                term <- mul.bigz(term, node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1])
+              } else {
+                term <- term * node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1]
+              }
             }
             out <- out + term
           }
-          
         }
         return(out)
       })
       do.call(c, ffs)
     })
     
-    pstar <- do.call(rbind, pstar)
-    
+    if(!bigz){
+      pstar <- do.call(rbind, pstar)
+    } else {
+
+      pstar <- t(matrix(do.call(c, pstar), ncol = max.unsampled + 1))
+    }
+
     node.info$pstar <- pstar
     node.info$v <- v
     node.calculations[[node]] <- node.info
   }
+  
   return(node.calculations)
 }
 
