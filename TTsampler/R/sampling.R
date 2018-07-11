@@ -251,7 +251,7 @@ sample.partial.tt <- function(generator,
     
     current.host.count <<- starting.current.host.count
 
-    no.visible <- sample(0:remaining.unsampled.hosts, 1, prob = as.integer(visible.count.weights))
+    no.visible <- sample(0:remaining.unsampled.hosts, 1, prob = as.numeric(visible.count.weights))
     
     no.hidden <- remaining.unsampled.hosts - no.visible
     
@@ -808,7 +808,7 @@ sample.partial.tt <- function(generator,
     
     prob.weights <- vmatrix[,us.count+1]
     
-    result <- sample(1:(sampled.host.count + 1), 1, prob = as.integer(prob.weights))
+    result <- sample(1:(sampled.host.count + 1), 1, prob = as.numeric(prob.weights))
     
     if(result == (sampled.host.count + 1)){
       result <- current.host.count + 1
@@ -844,7 +844,7 @@ sample.partial.tt <- function(generator,
         continuation.weight <- info[[node]]$pstar[sampled.host.count + 1, us.count+1] - info[[node]]$p[us.count+1]
       }
 
-      result <- sample(1:(sampled.host.count+2), 1, prob=as.integer(c(new.pat.weights, continuation.weight)))
+      result <- sample(1:(sampled.host.count+2), 1, prob=as.numeric(c(new.pat.weights, continuation.weight)))
       
       creep <- F
       
@@ -897,7 +897,7 @@ sample.partial.tt <- function(generator,
           stop("Encountered miscalculation 1")
         }
         
-        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.integer(column.weights))]
+        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
         
       } else if(result > sampled.host.count){
         # If this is a new unsampled node
@@ -916,11 +916,10 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != info[[node]]$pu[us.count + 1] ){
-
           stop("Encountered miscalculation 2.")
         }
         
-        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.integer(column.weights))]
+        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
         
       } else {
         # Otherwise
@@ -949,7 +948,7 @@ sample.partial.tt <- function(generator,
         }
         
         
-        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.integer(column.weights))]
+        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
         
       }
       

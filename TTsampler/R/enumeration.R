@@ -402,7 +402,13 @@ tt.generator <- function(tree,
     node.info$p <- p
     node.info$pstar <- pstar
     node.info$ps <- ps
-    node.info$pu <- v[nhosts + 1,]
+    
+    if(bigz){
+      node.info$pu <- c(v[nhosts + 1,])
+    } else {
+      node.info$pu <- v[nhosts + 1,]
+    }
+    
     
     node.calculations[[node]] <- node.info
     
@@ -443,11 +449,11 @@ tt.generator <- function(tree,
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
-              if(bigz){
-                term <- mul.bigz(term, node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1])
-              } else {
-                term <- term * node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1]
-              }
+              # print("Point 1")
+              # print(node.calculations[[kids[j]]]$pstar)
+              # print(nhosts + 1)
+              # print(distribution.of.us[j,i]+1)
+              term <- term * node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1]
             }
             out <- out + term
           }
@@ -457,7 +463,11 @@ tt.generator <- function(tree,
       v[nhosts + 1, ] <- temp
     }
     
-    node.info$pu <- v[nhosts + 1,]
+    if(bigz){
+      node.info$pu <- c(v[nhosts + 1,])
+    } else {
+      node.info$pu <- v[nhosts + 1,]
+    }
     
     # the rest of the rows
     
@@ -481,17 +491,13 @@ tt.generator <- function(tree,
               desc.tips <- unlist(phangorn::Descendants(tree, kids[j], type="tips"))
               if(host %in% bridge[desc.tips]){
                 # if child j is an ancestor of a tip from host
-                if(bigz){
-                  term <- mul.bigz(term, node.calculations[[kids[j]]]$v[host, distribution.of.us[j,i]+1])
-                } else {
-                  term <- term * node.calculations[[kids[j]]]$v[host, distribution.of.us[j,i]+1]
-                }
+                term <- term * node.calculations[[kids[j]]]$v[host, distribution.of.us[j,i]+1]
               } else {
-                if(bigz){
-                  term <- mul.bigz(term, node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1])
-                } else {
-                  term <- term * node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1]
-                }
+                # print("Point 2")
+                # print(node.calculations[[kids[j]]]$pstar)
+                # print(host)
+                # print(distribution.of.us[j,i]+1)
+                term <- term * node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1]
               }
             }
             out <- out + term
@@ -527,11 +533,11 @@ tt.generator <- function(tree,
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
-              if(bigz){
-                term <- mul.bigz(term, node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1])
-              } else {
-                term <- term * node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1]
-              }
+              # print("Point 3")
+              # print(node.calculations[[kids[j]]]$pstar)
+              # print(x)
+              # print(distribution.of.us[j,i]+1)
+              term <- term * node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1]
             }
             out <- out + term
           }
