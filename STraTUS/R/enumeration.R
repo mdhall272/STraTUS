@@ -453,10 +453,8 @@ tt.generator <- function(tree,
               # print(node.calculations[[kids[j]]]$pstar)
               # print(nhosts + 1)
               # print(distribution.of.us[j,i]+1)
-              print(distribution.of.us)
-              print(i)
-              print(j)
               term <- term * node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1]
+              # print("got through")
             }
             out <- out + term
           }
@@ -496,13 +494,6 @@ tt.generator <- function(tree,
                 # if child j is an ancestor of a tip from host
                 term <- term * node.calculations[[kids[j]]]$v[host, distribution.of.us[j,i]+1]
               } else {
-                # print("Point 2")
-                # print(node.calculations[[kids[j]]]$pstar)
-                # print(host)
-                # print(distribution.of.us[j,i]+1)
-                print(distribution.of.us)
-                print(i)
-                print(j)
                 term <- term * node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1]
               }
             }
@@ -539,13 +530,6 @@ tt.generator <- function(tree,
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
-              # print("Point 3")
-              # print(node.calculations[[kids[j]]]$pstar)
-              # print(x)
-              # print(distribution.of.us[j,i]+1)
-              print(distribution.of.us)
-              print(i)
-              print(j)
               term <- term * node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1]
             }
             out <- out + term
@@ -560,7 +544,7 @@ tt.generator <- function(tree,
       pstar <- do.call(rbind, pstar)
     } else {
 
-      pstar <- t(matrix(do.call(c, pstar), ncol = max.unsampled + 1))
+      pstar <- matrix(do.call(c, pstar), ncol = max.unsampled + 1)
     }
 
     node.info$pstar <- pstar
