@@ -1,4 +1,4 @@
-Package: TTsampler
+Package: STraTUS
 Title: Enumeration and Uniform Sampling of Transmission Trees for a Known Phlyogeny
 Version: 1.0.0
 Authors@R: person("Matthew", "Hall", email = "matthew.hall@bdi.ox.ac.uk", role = c("aut", "cre"))
