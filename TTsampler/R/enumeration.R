@@ -453,6 +453,9 @@ tt.generator <- function(tree,
               # print(node.calculations[[kids[j]]]$pstar)
               # print(nhosts + 1)
               # print(distribution.of.us[j,i]+1)
+              print(distribution.of.us)
+              print(i)
+              print(j)
               term <- term * node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1]
             }
             out <- out + term
@@ -497,6 +500,9 @@ tt.generator <- function(tree,
                 # print(node.calculations[[kids[j]]]$pstar)
                 # print(host)
                 # print(distribution.of.us[j,i]+1)
+                print(distribution.of.us)
+                print(i)
+                print(j)
                 term <- term * node.calculations[[kids[j]]]$pstar[host, distribution.of.us[j,i]+1]
               }
             }
@@ -537,6 +543,9 @@ tt.generator <- function(tree,
               # print(node.calculations[[kids[j]]]$pstar)
               # print(x)
               # print(distribution.of.us[j,i]+1)
+              print(distribution.of.us)
+              print(i)
+              print(j)
               term <- term * node.calculations[[kids[j]]]$pstar[x, distribution.of.us[j,i]+1]
             }
             out <- out + term
