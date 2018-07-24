@@ -539,12 +539,11 @@ tt.generator <- function(tree,
       })
       do.call(c, ffs)
     })
-    
+
     if(!bigz){
       pstar <- do.call(rbind, pstar)
     } else {
-
-      pstar <- matrix(do.call(c, pstar), ncol = max.unsampled + 1)
+      pstar <- matrix(do.call(c, pstar), ncol = max.unsampled + 1, byrow = T)
     }
 
     node.info$pstar <- pstar

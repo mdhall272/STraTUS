@@ -16,7 +16,7 @@
 #' \item{\code{igraph}}{ Present if \code{igraph} was TRUE; an \code{igraph} object.}
 #' }
 #' @export sample.tt
-#' @import ggtree phangorn gmp
+#' @import ggtree phangorn gmp RcppAlgos
 #' @importFrom igraph graph_from_edgelist
 
 
@@ -256,19 +256,21 @@ sample.partial.tt <- function(generator,
     no.hidden <- remaining.unsampled.hosts - no.visible
     
     a.sample <- .unified.down.phase(tree, starting.node, existing.annot, generator$node.calculations, no.visible, generator$height.limits, generator$bridge, verbose)
-    
+
     out$annotations <- a.sample
     
     branch.us.position.choice <- vector()
     if(no.visible != remaining.unsampled.hosts){
       if(!root.forced){
-        branch.us.position.options <- gtools::combinations(subtree.sampled.host.count + no.visible, no.hidden, repeats.allowed = T )
+        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible, no.hidden, repetition = T, n=1)},
+                                              error = function(e) stop("Integer overflow; too many combinations"))
       } else {
-        branch.us.position.options <- gtools::combinations(subtree.sampled.host.count + no.visible - 1, no.hidden, repeats.allowed = T )
+        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible - 1, no.hidden, repetition = T, n=1)},
+                                              error = function(e) stop("Integer overflow; too many combinations"))
       }
-      
-      branch.us.position.choice <- branch.us.position.options[sample(1:nrow(branch.us.position.options), 1),]
     }
+    
+    
     
     interventions <- existing.hidden
     
@@ -799,6 +801,7 @@ sample.partial.tt <- function(generator,
 # }
 
 .unified.down.phase <- function(tree, node, result.vector, info, us.count, height.limits, bridge, verbose = F){
+
   if(verbose) cat("At node",node,"with",us.count,"remaining unsampled regions\n")
   kids <- phangorn::Children(tree, node)
   vmatrix <- info[[node]]$v
@@ -863,7 +866,7 @@ sample.partial.tt <- function(generator,
     
   }
   
-  if(verbose) cat("Result is ", result, "\n")
+  if(verbose) cat("Assigned host is", result, "\n")
   
   if(!is.tip(tree, node)){
     if(us.count==0){
@@ -893,8 +896,8 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])){
-          
-          stop("Encountered miscalculation 1")
+          warning(paste0("Encountered miscalculation 1; difference is ", 
+                         abs(sum(column.weights) - (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1]))))
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -916,7 +919,7 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != info[[node]]$pu[us.count + 1] ){
-          stop("Encountered miscalculation 2.")
+          warning(paste0("Encountered miscalculation 2; difference is ", abs(sum(column.weights) - info[[node]]$pu[us.count + 1])))
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -943,8 +946,7 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != info[[node]]$v[result, us.count + 1])  {
-
-          stop("Encountered miscalculation 3.")
+          warning(paste0("Encountered miscalculation 3; difference is ", abs(sum(column.weights) - info[[node]]$v[result, us.count + 1])))
         }
         
         
@@ -961,7 +963,6 @@ sample.partial.tt <- function(generator,
       }
     }
   }
-  
   return(result.vector)
 }
 
