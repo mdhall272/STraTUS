@@ -267,14 +267,14 @@ sample.partial.tt <- function(generator,
     if(no.visible != remaining.unsampled.hosts){
       if(!root.forced){
         branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible, no.hidden, repetition = T, n=1)},
-                                              error = function(e) stop("Integer overflow; too many combinations"))
+                                              error = function(e) stop("Integer too large; too many combinations"))
       } else {
         branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible - 1, no.hidden, repetition = T, n=1)},
-                                              error = function(e) stop("Integer overflow; too many combinations"))
+                                              error = function(e) stop("Integer too large; too many combinations"))
       }
     }
     
-    
+    branch.us.position.choice <- c(branch.us.position.choice)
     
     interventions <- existing.hidden
     
