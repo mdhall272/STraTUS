@@ -239,6 +239,10 @@ sample.partial.tt <- function(generator,
     
   }
   
+  if(all(visible.count.weights==0)){
+    stop("No valid transmission trees for this configuration (root must be unsampled given these height limits?)")
+  }
+  
   annotations <- vector()
   hidden <- vector()
   
@@ -810,7 +814,7 @@ sample.partial.tt <- function(generator,
   if(node ==  phangorn::getRoot(tree)){
     
     prob.weights <- vmatrix[,us.count+1]
-
+    
     if(all(prob.weights==0)){
       stop("No valid transmission trees for this configuration")
     }
