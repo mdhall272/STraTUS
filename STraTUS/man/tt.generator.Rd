@@ -6,7 +6,7 @@
 \usage{
 tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
   max.sampling.to.noninfectious = Inf, minimum.heights = NULL,
-  maximum.heights = NULL, tip.map = NULL)
+  maximum.heights = NULL, tip.map = 1:length(tree$tip.label), bigz = F)
 }
 \arguments{
 \item{tree}{A \code{phylo} object}
@@ -22,6 +22,8 @@ tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
 \item{maximum.heights}{A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host. This overrides the given value of \code{max.infection.to.sampling}.}
 
 \item{tip.map}{A vector of the same length as the tip set of the tree listing a string giving the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.}
+
+\item{bigz}{Use \code{bigz} from \code{gmp} for integers, recommended for large trees}
 }
 \value{
 A list of class \code{tt.info} with the following fields:
@@ -29,9 +31,8 @@ A list of class \code{tt.info} with the following fields:
 \item{\code{tree}}{ The input tree}
 \item{\code{tt.count}}{The total number of possible transmission trees.}
 \item{\code{hosts}}{ The vector of host names. The order of the elements of this vector is used in the output of \code{sample.tt}.}
-\item{\code{height.limits}}{ Height constraints only. A matrix giving maximum and minimum node heights, in two columns. Rows are ordered by the order of hosts given in the \code{host} field.}
-\item{\code{bridge}}{ Multiple sampling only. A vector with the same length as the node set of the tree, dictating which nodes have their annotation forced by the tip annotations. Entries are host numbers for nodes whose annotation must be that host, and NA for nodes which can take multiple hosts.}
-\item{\code{type}}{ The variation used; \code{height.aware} if height constraints were specified, \code{multisampled} if a \code{tip.map} was given, \code{unsampled} if \code{max.unsampled} is greater than zero, \code{basic} otherwise.}
+\item{\code{height.limits}}{A matrix giving maximum and minimum node heights, in two columns. Rows are ordered by the order of hosts given in the \code{host} field.}
+\item{\code{bridge}}{A vector with the same length as the node set of the tree, dictating which nodes have their annotation forced by the tip annotations. Entries are host numbers for nodes whose annotation must be that host, and NA for nodes which can take multiple hosts.}
 \item{\code{node.calculations}}{ A list with the same length as the number of nodes of the tree and whose entries are indexed in the same order. If \code{max.unsampled} is 0, each has the following fields (the terminology here comes from the Hall paper):
 \itemize{
 \item{\code{p}}{ The number of valid partitions of the subtree rooted at this node.}
@@ -50,5 +51,5 @@ Alternatively, if \code{max.unsampled} is greater than 0, the entries are:
 }
 }
 \description{
-This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees. Note that at present, no combinations of variations (unsampled hosts, multiply-sampled hosts, and time constraints) are supported.
+This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees.
 }

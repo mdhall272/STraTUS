@@ -196,3 +196,12 @@ draw.incompletely.sampled <- function(generator, sample){
 
   return(picture)
 }
+
+colSums.fixed <- function(matrix,...){
+  if(!is.bigz(matrix)){
+    colSums(matrix, ...)
+  } else {
+    apply(matrix, 2, sum)
+  }
+  
+}

@@ -9,6 +9,7 @@
 #' @param minimum.heights A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the minimum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or smaller than the height of the last tip from the corresponding host. This overrides the given value of \code{max.sampling.to.noninfectious}.
 #' @param maximum.heights A vector of the same length as the set of sampled hosts (at present this is always the number of tips of the tree) dictating the maximum height at which nodes can be allocated to each host. The order is the same as the order of tips in \code{tree$tip.label}. If absent, no such restrictions will be placed. Each must be equal to or greater than the height of the last tip from the corresponding host. This overrides the given value of \code{max.infection.to.sampling}.
 #' @param tip.map A vector of the same length as the tip set of the tree listing a string giving the host from which the corresponding sample was derived. If absent, each tip is assumed to come from a different host and the tip names are taken to be the host names.
+#' @param bigz Use \code{bigz} from \code{gmp} for integers, recommended for large trees
 #' @return A list of class \code{tt.info} with the following fields:
 #' \itemize{
 #' \item{\code{tree}}{ The input tree}
@@ -34,6 +35,7 @@
 #' }
 #' @export tt.generator
 #' @import phangorn
+#' @importFrom gmp as.bigz is.bigz
 
 
 tt.generator <- function(tree,
@@ -42,7 +44,8 @@ tt.generator <- function(tree,
                          max.sampling.to.noninfectious = Inf,
                          minimum.heights = NULL,
                          maximum.heights = NULL,
-                         tip.map = 1:length(tree$tip.label)){
+                         tip.map = 1:length(tree$tip.label),
+                         bigz = F){
   
   if(max.infection.to.sampling < Inf & !is.null(maximum.heights)){
     max.infection.to.sampling <- Inf
@@ -114,17 +117,20 @@ tt.generator <- function(tree,
   if(max.unsampled > 0){
     hosts <- c(tree$tip.label, paste("uh", 1:max.unsampled, sep=""))
   }
-
+  
+  
+  results <- .unified.up.phase(tree, phangorn::getRoot(tree), list(), max.unsampled, height.limits, bridge, bigz)
+  
+  tt.count = lapply(0:max.unsampled, function(x){
     
-  results <- .unified.up.phase(tree, phangorn::getRoot(tree), list(), max.unsampled, height.limits, bridge)
-    
-  tt.count = sum(sapply(0:max.unsampled, function(x){
     sampled.hosts <- length(host.nos)
     visible.unsampled.hosts <- x
-
-    results[[phangorn::getRoot(tree)]]$p[x+1] * choose(max.unsampled + sampled.hosts - 1, visible.unsampled.hosts + sampled.hosts -1)
     
-  }))
+    results[[phangorn::getRoot(tree)]]$p[x+1] * choose(max.unsampled + sampled.hosts - 1, visible.unsampled.hosts + sampled.hosts - 1)
+    
+  })
+  
+  tt.count <- do.call(sum, tt.count)
   
   out <- list(tree = tree, hosts = hosts, tt.count = tt.count, height.limits = height.limits, bridge = bridge, node.calculations = results)
   
@@ -356,10 +362,10 @@ tt.generator <- function(tree,
                               node.calculations, 
                               max.unsampled = 0, 
                               height.limits = cbind(rep(-Inf, length(tree$tip.label)+1), rep(Inf, length(tree$tip.label)+1)),
-                              bridge = c(1:(length(tree$tip.label)), rep(NA, tree$Nnode))){
+                              bridge = c(1:(length(tree$tip.label)), rep(NA, tree$Nnode)),
+                              bigz = F){
 
   nhosts <- length(unique(stats::na.omit(bridge)))
-  
   
   if(is.tip(tree, node)){
     
@@ -377,33 +383,51 @@ tt.generator <- function(tree,
     v <- matrix(0, nrow = nhosts + 1, ncol = max.unsampled + 1)
     v[tiphost, 1] <- 1
     
-    node.info$v <- v
-    node.info$p <- c(1, rep(0, max.unsampled))
-    
     # pstar now has to be a matrix as it has to pay attention to both the unsampled host count and the time limits
     
     pstar <- matrix(0, nrow = nhosts + 1, ncol = max.unsampled + 1)
     pstar[,1] <- 1
     
+    p <- c(1, rep(0, max.unsampled))
+    
+    if(bigz){
+      v <- as.bigz(v)
+      p <- as.bigz(p)
+      pstar <- as.bigz(pstar)
+    } 
+
+    ps <- colSums.fixed(v[1:nhosts, , drop=F])
+    
+    node.info$v <- v
+    node.info$p <- p
     node.info$pstar <- pstar
-
-    node.info$ps <- colSums(v[1:nhosts, , drop=F])
-
-    node.info$pu <- v[nhosts + 1,]
+    node.info$ps <- ps
+    
+    if(bigz){
+      node.info$pu <- c(v[nhosts + 1,])
+    } else {
+      node.info$pu <- v[nhosts + 1,]
+    }
+    
     
     node.calculations[[node]] <- node.info
     
   } else {
-
+    
     kids <- phangorn::Children(tree,node)
-
+    
     for(child in kids){
-      node.calculations <- .unified.up.phase(tree, child, node.calculations, max.unsampled, height.limits, bridge)
+      node.calculations <- .unified.up.phase(tree, child, node.calculations, max.unsampled, height.limits, bridge, bigz)
     }
     
+    
     node.info <- list()
-
+    
     v <- matrix(0, nrow = nhosts + 1, ncol = max.unsampled + 1)
+    
+    if(bigz){
+      v <- as.bigz(v)
+    }
     
     # the row for the unsampled state
     
@@ -411,32 +435,40 @@ tt.generator <- function(tree,
       # never unsampled
       v[nhosts + 1, ] <- rep(0, max.unsampled + 1)
     } else {
-      v[nhosts + 1, ] <- sapply(0:max.unsampled, function(x){
+      temp <- do.call(c, lapply(0:max.unsampled, function(x){
         if(x==0){
-          return(0)
+          return(if(bigz) as.bigz(0) else 0)
         } else {
           # How many unsampled elements?
           
           # One element is accounted for at the root
           remaining.us.elements <- x - 1
-          
           out <- 0
-          
           distribution.of.us <- divide.k.into.n(remaining.us.elements, length(kids))
           
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
+              # print("Point 1")
+              # print(node.calculations[[kids[j]]]$pstar)
+              # print(nhosts + 1)
+              # print(distribution.of.us[j,i]+1)
               term <- term * node.calculations[[kids[j]]]$pstar[nhosts + 1, distribution.of.us[j,i]+1]
+              # print("got through")
             }
             out <- out + term
           }
           return(out)
         }
-      } )
+      } ))
+      v[nhosts + 1, ] <- temp
     }
-
-    node.info$pu <- v[nhosts + 1,]
+    
+    if(bigz){
+      node.info$pu <- c(v[nhosts + 1,])
+    } else {
+      node.info$pu <- v[nhosts + 1,]
+    }
     
     # the rest of the rows
     
@@ -448,15 +480,12 @@ tt.generator <- function(tree,
         # this node is in some other host's bridge
         v[host,] <- 0
       } else if(!(host %in% bridge[unlist(phangorn::Descendants(tree, node, type="tips"))] )){
-        # this host is not a tip of this subtree. THIS NEEDS TO BE IN THE PAPER
+        # this host is not a tip of this subtree. 
         v[host,] <- 0
       } else {
-        
-        temp <- sapply(0:max.unsampled, function(x){
+        temp <- lapply(0:max.unsampled, function(x){
           out <- 0
-          
           distribution.of.us <- divide.k.into.n(x, length(kids))
-          
           for(i in 1:ncol(distribution.of.us)){
             term <- 1
             for(j in 1:nrow(distribution.of.us)){
@@ -472,20 +501,26 @@ tt.generator <- function(tree,
           }
           return(out)
         })
-        
+        temp <- do.call(c, temp)
         v[host,] <- temp
       }
     }
-
-
-    node.info$ps <- colSums(v[1:nhosts,, drop=F])
-
-    node.info$p <- node.info$pu + node.info$ps
+    
+    node.info$ps <- colSums.fixed(v[1:nhosts,, drop=F])
+    
+    p <- node.info$pu + node.info$ps
+    if(bigz){
+      p <- c(p)
+    }
+    
+    node.info$p <- p
     
     tips.lower <- height.limits[,1] <= get.node.height(tree,node)
+    
+    pstar <- lapply(1:(nhosts+1), function(x){
 
-    pstar <- sapply(1:(nhosts+1), function(x){
-      sapply(0:max.unsampled, function(y){
+      ffs <- lapply(0:max.unsampled, function(y){
+
         out <- node.info$p[y+1]
         
         # That's all she wrote if this is a bridge node or it is outside the height limits. Otherwise:
@@ -499,23 +534,23 @@ tt.generator <- function(tree,
             }
             out <- out + term
           }
-          
         }
         return(out)
       })
+      do.call(c, ffs)
     })
-    
-    # grrr
-    
-    if(is.matrix(pstar)){
-      node.info$pstar <- t(pstar)
+
+    if(!bigz){
+      pstar <- do.call(rbind, pstar)
     } else {
-      node.info$pstar <- as.matrix(pstar)
+      pstar <- matrix(do.call(c, pstar), ncol = max.unsampled + 1, byrow = T)
     }
-                              
+
+    node.info$pstar <- pstar
     node.info$v <- v
     node.calculations[[node]] <- node.info
   }
+  
   return(node.calculations)
 }
 

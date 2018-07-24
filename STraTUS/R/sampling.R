@@ -6,6 +6,7 @@
 #' @param unsampled The number of unsampled hosts in the transmission chain.
 #' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overlaid onto the phylogeny.
 #' @param igraph Produce the transmission trees in \code{igraph} format.
+#' @param verbose Verbose output
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
 #' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
@@ -15,12 +16,12 @@
 #' \item{\code{igraph}}{ Present if \code{igraph} was TRUE; an \code{igraph} object.}
 #' }
 #' @export sample.tt
-#' @import ggtree phangorn 
+#' @import ggtree phangorn gmp RcppAlgos
 #' @importFrom igraph graph_from_edgelist
 
 
-sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igraph = F){
-  return(sample.partial.tt(generator, count, unsampled, phangorn::getRoot(generator$tree),  NULL, F, draw, igraph))
+sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igraph = F, verbose = F){
+  return(sample.partial.tt(generator, count, unsampled, phangorn::getRoot(generator$tree),  NULL, F, draw, igraph, verbose))
 }
 
 #' Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed
@@ -33,6 +34,7 @@ sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igra
 #' @param check.integrity Whether to check if \code{existing} is indeed a valid transmission tree.
 #' @param draw Use \code{ggtree} to draw a coloured phylogeny showing each transmission tree overload onto the phylogeny
 #' @param igraph Produce the transmission trees in \code{igraph} format.
+#' @param verbose Verbose output
 #' @return A list, each of whose elements is a list of class \code{tt} with one or more of the following elements:
 #' \itemize{
 #' \item{\code{annotations}}{ Always present. A vector indicating which host (given by numbers corresponding to the ordering in \code{generator$hosts}) is assigned to each phylogeny node.}
@@ -52,7 +54,8 @@ sample.partial.tt <- function(generator,
                               existing = NULL, 
                               check.integrity = T, 
                               draw = count==1, 
-                              igraph = F){
+                              igraph = F, 
+                              verbose = F){
   
   
   if(!inherits(generator, "tt.generator")){
@@ -62,22 +65,22 @@ sample.partial.tt <- function(generator,
   if(generator$tt.count == 0){
     stop("There are no valid transmission trees produced by this generator.")
   }
-
+  
   if(unsampled > 0){
     if ((ncol(generator$node.calculations[[1]]$v) - 1) < unsampled){
       stop("This sampler will not generate trees with this many unsampled hosts.")
     }
   }
-
+  
   if(is.null(existing) & starting.node!=phangorn::getRoot(generator$tree)){
     stop("An existing sample is required to resample the tree from any node other than the root.")
   }
-
+  
   tree <- generator$tree
-
+  
   existing.annot <- rep(0, node.count(tree))
   existing.hidden <- rep(0, node.count(tree))
-
+  
   if(!is.null(existing)){
     existing.annot <- existing$annotations
     if(unsampled > 0){
@@ -86,25 +89,25 @@ sample.partial.tt <- function(generator,
   }
   
   if(check.integrity){
-
+    
     if(length(existing.annot)!=node.count(tree)){
       stop(paste0("Existing sample vector should have ",node.count(tree)," items."))
     }
-
+    
     if(!is.numeric(existing.annot)){
       stop("Existing sample vector must be numerical")
     }
-
+    
     if(max(existing.annot) > length(generator$hosts)){
       stop("Extra hosts amongst the annotations in the existing sample vector")
     }
-
+    
     for(host in 1:(length(generator$hosts))){
       nodes <- which(existing.annot==host)
-
+      
       ok <- T
       # a valid integrity check is whether the MRCA of any two nodes with the same annotation also has that annotation
-
+      
       for(node.1 in nodes){
         for(node.2 in nodes){
           if(node.1!=node.2 & !(node.1 %in% phangorn::Ancestors(tree, node.2)) & !(node.2 %in% phangorn::Ancestors(tree, node.1))){
@@ -119,7 +122,7 @@ sample.partial.tt <- function(generator,
           break
         }
       }
-
+      
       if(!ok){
         break
       }
@@ -141,14 +144,14 @@ sample.partial.tt <- function(generator,
     # these are all the unsampled hosts in the entire tree
     if(unsampled > 0){
       unsampled.nos <- seq(sampled.host.count + 1, sampled.host.count + unsampled)
-    
-
-    
-    # We leave alone everything not involving the subtree rooted at starting.node.
-    # Hidden hosts on the root branch of that ARE resampled (they have to be, because it may not end up an infection branch)
-    # Existing unsampled hosts exist outside the subtree but can also exist inside it (if they creep down)
-    # Only visible hosts have numbers
-    
+      
+      
+      
+      # We leave alone everything not involving the subtree rooted at starting.node.
+      # Hidden hosts on the root branch of that ARE resampled (they have to be, because it may not end up an infection branch)
+      # Existing unsampled hosts exist outside the subtree but can also exist inside it (if they creep down)
+      # Only visible hosts have numbers
+      
       unsampled.nos.outside.subtree <- intersect(unsampled.nos, unique(existing.annot[other.nodes]))
       
       visible.existing.unsampled.hosts <- length(unsampled.nos.outside.subtree)
@@ -174,13 +177,15 @@ sample.partial.tt <- function(generator,
     
     # Unpleasant as this seems, it is probably easiest to renumber the existing hosts.
     
-    existing.annot <- sapply(existing.annot, function(x){
+    existing.annot <- lapply(existing.annot, function(x){
       if(x %in% unsampled.nos.outside.subtree){
         sampled.host.count + which(unsampled.nos.outside.subtree == x)
       } else {
         x
       }
     })
+    
+    existing.annot <- do.call(c, existing.annot)
     
   } else {
     starting.current.host.count <- sampled.host.count
@@ -197,7 +202,8 @@ sample.partial.tt <- function(generator,
     counts <- generator$node.calculations[[starting.node]]$p
     tip.hosts <- generator$bridge[1:length(tree$tip.label)]
     
-    visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(sampled.host.count + remaining.unsampled.hosts - 1, sampled.host.count + x - 1))
+    visible.count.weights <- lapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(sampled.host.count + remaining.unsampled.hosts - 1, sampled.host.count + x - 1))
+    visible.count.weights <- do.call(c, visible.count.weights)
     
     subtree.sampled.host.count <- sampled.host.count
     
@@ -217,7 +223,8 @@ sample.partial.tt <- function(generator,
       root.forced <- T
       
       counts <- generator$node.calculations[[starting.node]]$v[parent.host,]
-      visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(subtree.sampled.host.count + remaining.unsampled.hosts - 2, subtree.sampled.host.count + x - 2))
+      visible.count.weights <- lapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(subtree.sampled.host.count + remaining.unsampled.hosts - 2, subtree.sampled.host.count + x - 2))
+      visible.count.weights <- do.call(c, visible.count.weights)
       
     } else {
       # If the partition element to which existing.node belongs is not forced (so it is not a bridge node), then the parent is 
@@ -226,7 +233,8 @@ sample.partial.tt <- function(generator,
       # the subtree which receive remaining.unsampled.hosts minus the column index.
       
       counts <- generator$node.calculations[[starting.node]]$pstar
-      visible.count.weights <- sapply(0:remaining.unsampled.hosts, function(x) counts[parent.host,x+1]*choose(subtree.sampled.host.count + remaining.unsampled.hosts - 1, subtree.sampled.host.count + x - 1))
+      visible.count.weights <- lapply(0:remaining.unsampled.hosts, function(x) counts[parent.host,x+1]*choose(subtree.sampled.host.count + remaining.unsampled.hosts - 1, subtree.sampled.host.count + x - 1))
+      visible.count.weights <- do.call(c, visible.count.weights)
     }
     
   }
@@ -237,28 +245,32 @@ sample.partial.tt <- function(generator,
   results <- list()
   
   for(i in 1:count){
-    # cat("Sample ",i,"\n", sep="")
+    if(verbose) cat("Sample ",i,"\n", sep="")
     out <- list()
     class(out) <- append(class(out), "tt")
     
     current.host.count <<- starting.current.host.count
+
+    no.visible <- sample(0:remaining.unsampled.hosts, 1, prob = as.numeric(visible.count.weights))
     
-    no.visible <- sample(0:remaining.unsampled.hosts, 1, prob = visible.count.weights)
     no.hidden <- remaining.unsampled.hosts - no.visible
     
-    a.sample <- .unified.down.phase(tree, starting.node, existing.annot, generator$node.calculations, no.visible, generator$height.limits, generator$bridge)
-    
+    a.sample <- .unified.down.phase(tree, starting.node, existing.annot, generator$node.calculations, no.visible, generator$height.limits, generator$bridge, verbose)
+
     out$annotations <- a.sample
     
     branch.us.position.choice <- vector()
     if(no.visible != remaining.unsampled.hosts){
       if(!root.forced){
-        branch.us.position.options <- gtools::combinations(subtree.sampled.host.count + no.visible, no.hidden, repeats.allowed = T )
+        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible, no.hidden, repetition = T, n=1)},
+                                              error = function(e) stop("Integer overflow; too many combinations"))
       } else {
-        branch.us.position.options <- gtools::combinations(subtree.sampled.host.count + no.visible - 1, no.hidden, repeats.allowed = T )
+        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible - 1, no.hidden, repetition = T, n=1)},
+                                              error = function(e) stop("Integer overflow; too many combinations"))
       }
-      branch.us.position.choice <- branch.us.position.options[sample(1:nrow(branch.us.position.options), 1),]
     }
+    
+    
     
     interventions <- existing.hidden
     
@@ -323,7 +335,7 @@ sample.partial.tt <- function(generator,
   
   return(results)
   
-
+  
   # if(generator$type=="basic"){
   #   results <- replicate(count, .basic.down.phase(tree, starting.node, existing.annot, generator$node.calculations))
   # 
@@ -788,21 +800,27 @@ sample.partial.tt <- function(generator,
 #   return(result.vector)
 # }
 
-.unified.down.phase <- function(tree, node, result.vector, info, us.count, height.limits, bridge){
-  # cat("At node",node,"with",us.count,"remaining unsampled regions\n")
+.unified.down.phase <- function(tree, node, result.vector, info, us.count, height.limits, bridge, verbose = F){
+
+  if(verbose) cat("At node",node,"with",us.count,"remaining unsampled regions\n")
   kids <- phangorn::Children(tree, node)
   vmatrix <- info[[node]]$v
   sampled.host.count <- length(unique(stats::na.omit(bridge)))
   
   if(node ==  phangorn::getRoot(tree)){
-
+    
     prob.weights <- vmatrix[,us.count+1]
+<<<<<<< HEAD:STraTUS/R/sampling.R
 
     if(all(prob.weights==0)){
       stop("No valid transmission trees for this configuration")
     }
     
     result <- sample(1:(sampled.host.count + 1), 1, prob = prob.weights)
+=======
+    
+    result <- sample(1:(sampled.host.count + 1), 1, prob = as.numeric(prob.weights))
+>>>>>>> bignumbers:STraTUS/R/sampling.R
     
     if(result == (sampled.host.count + 1)){
       result <- current.host.count + 1
@@ -835,16 +853,18 @@ sample.partial.tt <- function(generator,
           continuation.weight <- 0
         }
       } else {
-        
         continuation.weight <- info[[node]]$pstar[sampled.host.count + 1, us.count+1] - info[[node]]$p[us.count+1]
-
       }
 
+<<<<<<< HEAD:STraTUS/R/sampling.R
       if(all(c(new.pat.weights, continuation.weight)==0)){
         stop("No valid transmission trees for this configuration")
       }
       
       result <- sample(1:(sampled.host.count+2), 1, prob=c(new.pat.weights, continuation.weight))
+=======
+      result <- sample(1:(sampled.host.count+2), 1, prob=as.numeric(c(new.pat.weights, continuation.weight)))
+>>>>>>> bignumbers:STraTUS/R/sampling.R
       
       creep <- F
       
@@ -863,12 +883,12 @@ sample.partial.tt <- function(generator,
     
   }
   
-  # cat("Result is ", result, "\n")
-
+  if(verbose) cat("Assigned host is", result, "\n")
+  
   if(!is.tip(tree, node)){
     if(us.count==0){
       for(child in kids){
-        result.vector <- .unified.down.phase(tree, child, result.vector, info, 0, height.limits, bridge)
+        result.vector <- .unified.down.phase(tree, child, result.vector, info, 0, height.limits, bridge, verbose)
       }
     } else {
       if(creep){
@@ -881,46 +901,62 @@ sample.partial.tt <- function(generator,
         
         distribution.of.us <- divide.k.into.n(us.count, length(kids))
         
-        column.weights <- sapply(1:ncol(distribution.of.us), function(i){
-          temp <- sapply(1:nrow(distribution.of.us), function(j){
+        column.weights <- lapply(1:ncol(distribution.of.us), function(i){
+          temp <- lapply(1:nrow(distribution.of.us), function(j){
             info[[kids[j]]]$pstar[what.comes.down, (distribution.of.us[j,i]+1)]
           })
           
+          temp <- do.call(c, temp)
+          
           return(prod(temp))
         })
+        column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])){
+<<<<<<< HEAD:STraTUS/R/sampling.R
           
           warning("Encountered miscalculation 1")
+=======
+          warning(paste0("Encountered miscalculation 1; difference is ", 
+                         abs(sum(column.weights) - (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1]))))
+>>>>>>> bignumbers:STraTUS/R/sampling.R
         }
         
-        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=column.weights)]
-
+        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
+        
       } else if(result > sampled.host.count){
         # If this is a new unsampled node
         distribution.of.us <- divide.k.into.n(us.count-1, length(kids))
         
-        column.weights <- sapply(1:ncol(distribution.of.us), function(i){
-          temp <- sapply(1:nrow(distribution.of.us), function(j){
+        column.weights <- lapply(1:ncol(distribution.of.us), function(i){
+          temp <- lapply(1:nrow(distribution.of.us), function(j){
             info[[kids[j]]]$pstar[sampled.host.count + 1, (distribution.of.us[j,i]+1)]
           })
+          
+          temp <- do.call(c, temp)
           
           return(prod(temp))
         })
         
+        column.weights <- do.call(c, column.weights)
+        
         if(sum(column.weights) != info[[node]]$pu[us.count + 1] ){
+<<<<<<< HEAD:STraTUS/R/sampling.R
           warning("Encountered miscalculation 2.")
+=======
+          warning(paste0("Encountered miscalculation 2; difference is ", abs(sum(column.weights) - info[[node]]$pu[us.count + 1])))
+>>>>>>> bignumbers:STraTUS/R/sampling.R
         }
         
-        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=column.weights)]
+        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
         
       } else {
         # Otherwise
         
         distribution.of.us <- divide.k.into.n(us.count, length(kids))
         
-        column.weights <- sapply(1:ncol(distribution.of.us), function(i){
-          temp <- sapply(1:nrow(distribution.of.us), function(j){
+        column.weights <- lapply(1:ncol(distribution.of.us), function(i){
+          temp <- lapply(1:nrow(distribution.of.us), function(j){
             if(result %in% bridge[unlist(Descendants(tree, kids[j], type="tips"))]){
               info[[kids[j]]]$v[result, distribution.of.us[j,i]+1]
             } else {
@@ -928,26 +964,37 @@ sample.partial.tt <- function(generator,
             }
           })
           
+          temp <- do.call(c, temp)
+          
           return(prod(temp))
         })
         
+        column.weights <- do.call(c, column.weights)
+        
         if(sum(column.weights) != info[[node]]$v[result, us.count + 1])  {
+<<<<<<< HEAD:STraTUS/R/sampling.R
           # print(info)
           # 
           warning("Encountered miscalculation 3.")
+=======
+          warning(paste0("Encountered miscalculation 3; difference is ", abs(sum(column.weights) - info[[node]]$v[result, us.count + 1])))
+>>>>>>> bignumbers:STraTUS/R/sampling.R
         }
         
-        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=column.weights)]
+        
+        chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
         
       }
-      # cat(chosen.i,"go to the left tree,",kids[1],"\n")
-      # cat(chosen.j,"go to the right tree,",kids[2],"\n")
+      
+      for(cn in 1:length(chosen.col)){
+        if(verbose) cat(chosen.col[cn], "unsampled regions go to the subtree rooted at",kids[cn],"\n")
+      }
+      
       for(child.no in 1:length(kids)){
-        result.vector <- .unified.down.phase(tree, kids[child.no], result.vector, info, chosen.col[child.no], height.limits, bridge)
+        result.vector <- .unified.down.phase(tree, kids[child.no], result.vector, info, chosen.col[child.no], height.limits, bridge, verbose)
       }
     }
   }
-  
   return(result.vector)
 }
 
