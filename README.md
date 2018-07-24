@@ -3,4 +3,4 @@ This utility takes as input a phylogenetic tree and, interpreting it as a pathog
 
 It is primarily intended for those interested in exploring the structure of transmission tree space, or in developing algorithms to do this, and should not generally be used for phylodynamic inference on its own.
 
-The code is provided as an R package. Documentation is [here](https://github.com/mdhall272/TTsampler/blob/master/TTsampler/TTsampler.pdf). 
+The code is provided as an R package. Documentation is [here](https://github.com/mdhall272/STraTUS/blob/master/STraTUS/STraTUS.pdf). 
