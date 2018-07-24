@@ -810,17 +810,12 @@ sample.partial.tt <- function(generator,
   if(node ==  phangorn::getRoot(tree)){
     
     prob.weights <- vmatrix[,us.count+1]
-<<<<<<< HEAD:STraTUS/R/sampling.R
 
     if(all(prob.weights==0)){
       stop("No valid transmission trees for this configuration")
     }
     
     result <- sample(1:(sampled.host.count + 1), 1, prob = prob.weights)
-=======
-    
-    result <- sample(1:(sampled.host.count + 1), 1, prob = as.numeric(prob.weights))
->>>>>>> bignumbers:STraTUS/R/sampling.R
     
     if(result == (sampled.host.count + 1)){
       result <- current.host.count + 1
@@ -856,16 +851,12 @@ sample.partial.tt <- function(generator,
         continuation.weight <- info[[node]]$pstar[sampled.host.count + 1, us.count+1] - info[[node]]$p[us.count+1]
       }
 
-<<<<<<< HEAD:STraTUS/R/sampling.R
       if(all(c(new.pat.weights, continuation.weight)==0)){
         stop("No valid transmission trees for this configuration")
       }
       
       result <- sample(1:(sampled.host.count+2), 1, prob=c(new.pat.weights, continuation.weight))
-=======
-      result <- sample(1:(sampled.host.count+2), 1, prob=as.numeric(c(new.pat.weights, continuation.weight)))
->>>>>>> bignumbers:STraTUS/R/sampling.R
-      
+
       creep <- F
       
       if(result == sampled.host.count + 2){
@@ -913,13 +904,8 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])){
-<<<<<<< HEAD:STraTUS/R/sampling.R
-          
-          warning("Encountered miscalculation 1")
-=======
           warning(paste0("Encountered miscalculation 1; difference is ", 
                          abs(sum(column.weights) - (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1]))))
->>>>>>> bignumbers:STraTUS/R/sampling.R
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -941,11 +927,7 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != info[[node]]$pu[us.count + 1] ){
-<<<<<<< HEAD:STraTUS/R/sampling.R
-          warning("Encountered miscalculation 2.")
-=======
           warning(paste0("Encountered miscalculation 2; difference is ", abs(sum(column.weights) - info[[node]]$pu[us.count + 1])))
->>>>>>> bignumbers:STraTUS/R/sampling.R
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -972,13 +954,7 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != info[[node]]$v[result, us.count + 1])  {
-<<<<<<< HEAD:STraTUS/R/sampling.R
-          # print(info)
-          # 
-          warning("Encountered miscalculation 3.")
-=======
           warning(paste0("Encountered miscalculation 3; difference is ", abs(sum(column.weights) - info[[node]]$v[result, us.count + 1])))
->>>>>>> bignumbers:STraTUS/R/sampling.R
         }
         
         
