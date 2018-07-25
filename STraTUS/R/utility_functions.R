@@ -203,5 +203,19 @@ colSums.fixed <- function(matrix,...){
   } else {
     apply(matrix, 2, sum)
   }
-  
+}
+
+# I only need one sample
+
+bigz.sample <- function(x, prob=rep(1, length(x))){
+  total <- sum(prob)
+  probs <- prob/total 
+  unif.sample <- runif(1)
+  index <- 1
+  sum <- probs[1]
+  while(unif.sample > sum){
+    index <- index + 1
+    sum <- sum + probs[index]
+  }
+  x[index]
 }

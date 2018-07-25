@@ -819,7 +819,14 @@ sample.partial.tt <- function(generator,
       stop("No valid transmission trees for this configuration")
     }
     
-    result <- sample(1:(sampled.host.count + 1), 1, prob = prob.weights)
+    if(is.bigz(prob.weights)){
+      prob.weights <- c(prob.weights)
+      result <- bigz.sample(1:(sampled.host.count + 1), prob = prob.weights)
+    } else {
+      result <- sample(1:(sampled.host.count + 1), 1, prob = prob.weights)
+    }
+    
+    
     
     if(result == (sampled.host.count + 1)){
       result <- current.host.count + 1
@@ -859,7 +866,15 @@ sample.partial.tt <- function(generator,
         stop("No valid transmission trees for this configuration")
       }
       
-      result <- sample(1:(sampled.host.count+2), 1, prob=c(new.pat.weights, continuation.weight))
+      prob.weights <- c(new.pat.weights, continuation.weight)
+      
+      if(is.bigz(prob.weights)){
+        prob.weights <- c(prob.weights)
+        result <- bigz.sample(1:(sampled.host.count + 2), prob = prob.weights)
+      } else {
+        result <- sample(1:(sampled.host.count+2), 1, prob=prob.weights)
+      }
+      
 
       creep <- F
       
