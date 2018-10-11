@@ -925,7 +925,7 @@ sample.partial.tt <- function(generator,
         if(sum(column.weights) != (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])){
           warning(paste0("Encountered miscalculation 1; error is ", 
                          (abs(sum(column.weights) - (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])))/
-                           (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])))
+                           (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1]), "\n"))
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -948,7 +948,7 @@ sample.partial.tt <- function(generator,
         
         if(sum(column.weights) != info[[node]]$pu[us.count + 1] ){
           warning(paste0("Encountered miscalculation 2; error is ", 
-                         (abs(sum(column.weights) - info[[node]]$pu[us.count + 1]))/info[[node]]$pu[us.count + 1]))
+                         (abs(sum(column.weights) - info[[node]]$pu[us.count + 1]))/info[[node]]$pu[us.count + 1], "\n"))
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -976,7 +976,7 @@ sample.partial.tt <- function(generator,
         
         if(sum(column.weights) != info[[node]]$v[result, us.count + 1])  {
           warning(paste0("Encountered miscalculation 3; error is ", 
-                         (abs(sum(column.weights) - info[[node]]$v[result, us.count + 1]))/info[[node]]$v[result, us.count + 1]))
+                         (abs(sum(column.weights) - info[[node]]$v[result, us.count + 1]))/info[[node]]$v[result, us.count + 1], "\n"))
         }
         
         
