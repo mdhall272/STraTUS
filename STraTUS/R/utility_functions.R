@@ -50,6 +50,7 @@ build.edgelist <- function(generator, sample){
   if(is.null(interventions)){
     interventions <- rep(0, length(tree$tip.label) + tree$Nnode)
   }
+  
   parents <- vector()
 
   current.host.count <- max(annotations)
