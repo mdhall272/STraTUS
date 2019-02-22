@@ -10,3 +10,4 @@ Imports: phangorn, igraph, gmp, gtools, ggplot2, ggtree, RcppAlgos, stats
 License: GPL
 Encoding: UTF-8
 RoxygenNote: 6.1.1
+LazyData: TRUE

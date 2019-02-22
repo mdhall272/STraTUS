@@ -54,3 +54,16 @@ Alternatively, if \code{max.unsampled} is greater than 0, the entries are:
 \description{
 This function produces a list of class \code{tt.generator} which can be used to randomly sample transmission trees for the input phylogeny, and contains information on the number of compatible transmission trees.
 }
+\examples{
+# make a generator for the example tree
+generator <- tt.generator(stratus.example.tree)
+# count the total number of transmission trees
+generator$tt.count
+# make a generator for the example tree with at most two unsampled hosts
+generator.2us <- tt.generator(stratus.example.tree, max.unsampled = 2)
+# make a generator for the example tree with no infection after sampling
+generator.limits <- tt.generator(stratus.example.tree, max.sampling.to.noninfectious = 0)
+# make a generator with multiple sampling defined by the vector grouping.map
+generator.ms <- tt.generator(stratus.example.tree, tip.map = grouping.map)
+add(10, 1)
+}
