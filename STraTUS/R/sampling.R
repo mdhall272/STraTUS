@@ -254,13 +254,13 @@ sample.partial.tt <- function(generator,
     class(out) <- append(class(out), "tt")
     
     current.host.count <<- starting.current.host.count
-
+    
     no.visible <- sample(0:remaining.unsampled.hosts, 1, prob = as.numeric(visible.count.weights))
     
     no.hidden <- remaining.unsampled.hosts - no.visible
     
     a.sample <- .unified.down.phase(tree, starting.node, existing.annot, generator$node.calculations, no.visible, generator$height.limits, generator$bridge, verbose)
-
+    
     out$annotations <- a.sample
     
     branch.us.position.choice <- vector()
@@ -336,11 +336,13 @@ sample.partial.tt <- function(generator,
     results[[i]] <- out
     
   }
-  
   return(results)
+}
+
+
 
 .unified.down.phase <- function(tree, node, result.vector, info, us.count, height.limits, bridge, verbose = F){
-
+  
   if(verbose) cat("At node",node,"with",us.count,"remaining unsampled regions\n")
   kids <- phangorn::Children(tree, node)
   vmatrix <- info[[node]]$v
@@ -396,7 +398,7 @@ sample.partial.tt <- function(generator,
       } else {
         continuation.weight <- info[[node]]$pstar[sampled.host.count + 1, us.count+1] - info[[node]]$p[us.count+1]
       }
-
+      
       if(all(c(new.pat.weights, continuation.weight)==0)){
         stop("No valid transmission trees for this configuration")
       }
@@ -410,7 +412,7 @@ sample.partial.tt <- function(generator,
         result <- sample(1:(sampled.host.count+2), 1, prob=prob.weights)
       }
       
-
+      
       creep <- F
       
       if(result == sampled.host.count + 2){

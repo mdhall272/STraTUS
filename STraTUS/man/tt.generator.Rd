@@ -6,7 +6,8 @@
 \usage{
 tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
   max.sampling.to.noninfectious = Inf, minimum.heights = NULL,
-  maximum.heights = NULL, tip.map = 1:length(tree$tip.label), bigz = F)
+  maximum.heights = NULL, tip.map = 1:length(tree$tip.label),
+  bigz = F)
 }
 \arguments{
 \item{tree}{A \code{phylo} object}
