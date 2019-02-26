@@ -5,7 +5,7 @@
 \title{Sample one or more transmission trees uniformly}
 \usage{
 sample.tt(generator, count = 1, unsampled = 0, draw = count == 1,
-  igraph = F, verbose = F)
+  igraph = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}
@@ -32,4 +32,18 @@ A list, each of whose elements is a list of class \code{tt} with one or more of 
 }
 \description{
 Sample one or more transmission trees uniformly
+}
+\examples{
+# draw one sample from the uniform distribution
+generator <- tt.generator(stratus.example.tree)
+samples <- sample.tt(generator, 1, draw = TRUE)
+samples[[1]]
+# with unsampled.hosts
+generator.us <- tt.generator(stratus.example.tree, max.unsampled = 2)
+# note that you can ask for less unsampled hosts than the generator has (but not more)
+samples.1us <- sample.tt(generator.us, 1, unsampled = 1,  draw = TRUE)
+samples.1us[[1]]
+# with multiply sampled hosts
+generator.ms <- tt.generator(stratus.example.tree, tip.map = grouping.map)
+samples.ms <- sample.tt(generator.ms, 1, draw = TRUE)
 }

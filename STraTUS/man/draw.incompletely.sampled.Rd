@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility_functions.R
 \name{draw.incompletely.sampled}
 \alias{draw.incompletely.sampled}
-\title{For a sample with unsampled hosts, draw the annotated phylogeny using \code{ggtree}}
+\title{For a sample with or without unsampled hosts, draw the annotated phylogeny using \code{ggtree}}
 \usage{
 draw.incompletely.sampled(generator, sample)
 }
@@ -15,5 +15,5 @@ draw.incompletely.sampled(generator, sample)
 A \code{ggtree} object
 }
 \description{
-For a sample with unsampled hosts, draw the annotated phylogeny using \code{ggtree}
+For a sample with or without unsampled hosts, draw the annotated phylogeny using \code{ggtree}
 }

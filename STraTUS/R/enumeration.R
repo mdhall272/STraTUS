@@ -56,7 +56,7 @@ tt.generator <- function(tree,
                          minimum.heights = NULL,
                          maximum.heights = NULL,
                          tip.map = tree$tip.label,
-                         bigz = F){
+                         bigz = FALSE){
   
   if(max.infection.to.sampling < Inf & !is.null(maximum.heights)){
     max.infection.to.sampling <- Inf
@@ -70,19 +70,23 @@ tt.generator <- function(tree,
   
   host.nos <- 1:length(unique(tip.map))
   
+  numerical.tip.map <- as.integer(sapply(tip.map, function(x){
+    which(unique(tip.map) == x)
+  }))
+  
   has.heights <- max.infection.to.sampling<Inf | max.sampling.to.noninfectious<Inf | !is.null(minimum.heights) | !is.null(maximum.heights)
   
   if(has.heights){
     
     if(max.sampling.to.noninfectious < Inf){
-      minimum.heights <- sapply(1:length(host.nos), function(x) {
-        min(sapply(which(tip.map==x), function(y) get.node.height(tree, y) - max.sampling.to.noninfectious))
+      minimum.heights <- sapply(1:max(host.nos), function(x) {
+        min(sapply(which(numerical.tip.map==x), function(y) get.node.height(tree, y) - max.sampling.to.noninfectious))
       })
     }
     
     if(max.infection.to.sampling < Inf){
-      maximum.heights <- sapply(1:length(host.nos), function(x) {
-        max(sapply(which(tip.map==x), function(y) get.node.height(tree, y) + max.infection.to.sampling))
+      maximum.heights <- sapply(1:max(host.nos), function(x) {
+        max(sapply(which(numerical.tip.map==x), function(y) get.node.height(tree, y) + max.infection.to.sampling))
       })
     }
     
@@ -104,9 +108,7 @@ tt.generator <- function(tree,
     height.limits <- cbind(rep(-Inf, length(host.nos)+1), rep(Inf, length(host.nos)+1))
   }
   
-  numerical.tip.map <- map_int(tip.map, function(x){
-    which(unique(tip.map) == x)
-  })
+
   
   bridge <- tryCatch(
     .build.bridge(tree, host.nos, numerical.tip.map),
@@ -150,7 +152,7 @@ tt.generator <- function(tree,
                               max.unsampled = 0, 
                               height.limits = cbind(rep(-Inf, length(tree$tip.label)+1), rep(Inf, length(tree$tip.label)+1)),
                               bridge = c(1:(length(tree$tip.label)), rep(NA, tree$Nnode)),
-                              bigz = F){
+                              bigz = FALSE){
 
   nhosts <- length(unique(stats::na.omit(bridge)))
   
@@ -183,7 +185,7 @@ tt.generator <- function(tree,
       pstar <- as.bigz(pstar)
     } 
 
-    ps <- colSums.fixed(v[1:nhosts, , drop=F])
+    ps <- colSums.fixed(v[1:nhosts, , drop=FALSE])
     
     node.info$v <- v
     node.info$p <- p
@@ -293,7 +295,7 @@ tt.generator <- function(tree,
       }
     }
     
-    node.info$ps <- colSums.fixed(v[1:nhosts,, drop=F])
+    node.info$ps <- colSums.fixed(v[1:nhosts,, drop=FALSE])
     
     p <- node.info$pu + node.info$ps
     if(bigz){
@@ -330,7 +332,7 @@ tt.generator <- function(tree,
     if(!bigz){
       pstar <- do.call(rbind, pstar)
     } else {
-      pstar <- matrix(do.call(c, pstar), ncol = max.unsampled + 1, byrow = T)
+      pstar <- matrix(do.call(c, pstar), ncol = max.unsampled + 1, byrow = TRUE)
     }
 
     node.info$pstar <- pstar

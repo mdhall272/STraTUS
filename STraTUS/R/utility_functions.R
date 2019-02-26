@@ -124,12 +124,12 @@ draw.fully.sampled <- function(generator, sample){
   
   first.in.split <- sapply(1:node.count(tree), function(x) {
     if(phangorn::getRoot(tree) == x){
-      return(T)
+      return(TRUE)
     }
     if(annots[x] == annots[phangorn::Ancestors(tree, x, type="parent")]){
-      return(F)
+      return(FALSE)
     }
-    return(T)
+    return(TRUE)
   })
   
   branch.colour.annots <- annots
@@ -169,12 +169,12 @@ draw.incompletely.sampled <- function(generator, sample){
   
   first.in.split <- sapply(1:node.count(tree), function(x) {
     if(phangorn::getRoot(tree) == x){
-      return(T)
+      return(TRUE)
     }
     if(node.annots[x] == node.annots[phangorn::Ancestors(tree, x, type="parent")]){
-      return(F)
+      return(FALSE)
     }
-    return(T)
+    return(TRUE)
   })
   
   branch.colour.annots <- node.annots
@@ -186,7 +186,7 @@ draw.incompletely.sampled <- function(generator, sample){
   adjustments[phangorn::getRoot(tree)] <- 1.5
   
   attr(tree, "node.annots") <- node.annots
-  attr(tree, "verbose.tip.labels") <- c(map_chr(1:length(tree$tip.label), function(x){
+  attr(tree, "verbose.tip.labels") <- c(sapply(1:length(tree$tip.label), function(x){
     paste0(tree$tip.label[x], " (",node.annots[x], ")")
   }), rep(NA, tree$Nnode))
   attr(tree, "branch.colour.annots") <- branch.colour.annots

@@ -6,7 +6,7 @@ Author: Matthew Hall
 Maintainer: Matthew Hall <matthew.hall@bdi.ox.ac.uk>
 Description: For a single, known pathogen phylogeny, the functions here enumerate and uniformly sample from the set of compatible transmission trees. A complete transmission bottleneck and no superinfection or reinfection are assumed; complete and single sampling are not.
 Depends: R (>= 3.4.1)
-Imports: phangorn, igraph, gmp, gtools, ggplot2, ggtree, RcppAlgos, stats
+Imports: ape, phangorn, igraph, gmp, gtools, ggplot2, ggtree, RcppAlgos, stats
 License: GPL
 Encoding: UTF-8
 RoxygenNote: 6.1.1

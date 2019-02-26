@@ -6,8 +6,7 @@
 \usage{
 tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
   max.sampling.to.noninfectious = Inf, minimum.heights = NULL,
-  maximum.heights = NULL, tip.map = 1:length(tree$tip.label),
-  bigz = F)
+  maximum.heights = NULL, tip.map = tree$tip.label, bigz = FALSE)
 }
 \arguments{
 \item{tree}{A \code{phylo} object}
@@ -65,5 +64,4 @@ generator.2us <- tt.generator(stratus.example.tree, max.unsampled = 2)
 generator.limits <- tt.generator(stratus.example.tree, max.sampling.to.noninfectious = 0)
 # make a generator with multiple sampling defined by the vector grouping.map
 generator.ms <- tt.generator(stratus.example.tree, tip.map = grouping.map)
-add(10, 1)
 }

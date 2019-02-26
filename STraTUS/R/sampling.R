@@ -21,20 +21,20 @@
 #' @examples
 #' # draw one sample from the uniform distribution
 #' generator <- tt.generator(stratus.example.tree)
-#' samples <- sample.tt(generator, 1, draw = T)
+#' samples <- sample.tt(generator, 1, draw = TRUE)
 #' samples[[1]]
 #' # with unsampled.hosts
 #' generator.us <- tt.generator(stratus.example.tree, max.unsampled = 2)
 #' # note that you can ask for less unsampled hosts than the generator has (but not more)
-#' samples.1us <- sample.tt(generator.us, 1, unsampled = 1,  draw = T)
+#' samples.1us <- sample.tt(generator.us, 1, unsampled = 1,  draw = TRUE)
 #' samples.1us[[1]]
 #' # with multiply sampled hosts
 #' generator.ms <- tt.generator(stratus.example.tree, tip.map = grouping.map)
-#' samples.ms <- sample.tt(generator.ms, 1, draw = T)
+#' samples.ms <- sample.tt(generator.ms, 1, draw = TRUE)
 
 
-sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igraph = F, verbose = F){
-  return(sample.partial.tt(generator, count, unsampled, phangorn::getRoot(generator$tree),  NULL, F, draw, igraph, verbose))
+sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igraph = FALSE, verbose = FALSE){
+  return(sample.partial.tt(generator, count, unsampled, phangorn::getRoot(generator$tree),  NULL, FALSE, draw, igraph, verbose))
 }
 
 #' Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed
@@ -65,10 +65,10 @@ sample.partial.tt <- function(generator,
                               unsampled = 0, 
                               starting.node = phangorn::getRoot(generator$tree), 
                               existing = NULL, 
-                              check.integrity = T, 
+                              check.integrity = TRUE, 
                               draw = count==1, 
-                              igraph = F, 
-                              verbose = F){
+                              igraph = FALSE, 
+                              verbose = FALSE){
   
   
   if(!inherits(generator, "tt.generator")){
@@ -118,7 +118,7 @@ sample.partial.tt <- function(generator,
     for(host in 1:(length(generator$hosts))){
       nodes <- which(existing.annot==host)
       
-      ok <- T
+      ok <- TRUE
       # a valid integrity check is whether the MRCA of any two nodes with the same annotation also has that annotation
       
       for(node.1 in nodes){
@@ -126,7 +126,7 @@ sample.partial.tt <- function(generator,
           if(node.1!=node.2 & !(node.1 %in% phangorn::Ancestors(tree, node.2)) & !(node.2 %in% phangorn::Ancestors(tree, node.1))){
             mrca <- phangorn::mrca.phylo(tree, c(node.1, node.2))
             if(existing.annot[mrca]!=host){
-              ok <- F
+              ok <- FALSE
               break
             }
           }
@@ -208,7 +208,7 @@ sample.partial.tt <- function(generator,
     remaining.unsampled.hosts <- unsampled
   }
   
-  root.forced <- F
+  root.forced <- FALSE
   
   if(starting.node == phangorn::getRoot(tree)){
     
@@ -233,7 +233,7 @@ sample.partial.tt <- function(generator,
       # 1, plus the column index, minus 1, infection branches in that subtree which receive remaining.unsampled.hosts minus the 
       # column index.
       
-      root.forced <- T
+      root.forced <- TRUE
       
       counts <- generator$node.calculations[[starting.node]]$v[parent.host,]
       visible.count.weights <- lapply(0:remaining.unsampled.hosts, function(x) counts[x+1]*choose(subtree.sampled.host.count + remaining.unsampled.hosts - 2, subtree.sampled.host.count + x - 2))
@@ -279,10 +279,10 @@ sample.partial.tt <- function(generator,
     branch.us.position.choice <- vector()
     if(no.visible != remaining.unsampled.hosts){
       if(!root.forced){
-        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible, no.hidden, repetition = T, n=1)},
+        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible, no.hidden, repetition = TRUE, n=1)},
                                               error = function(e) stop("Integer too large; too many combinations"))
       } else {
-        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible - 1, no.hidden, repetition = T, n=1)},
+        branch.us.position.choice <- tryCatch({comboSample(subtree.sampled.host.count + no.visible - 1, no.hidden, repetition = TRUE, n=1)},
                                               error = function(e) stop("Integer too large; too many combinations"))
       }
     }
@@ -354,7 +354,7 @@ sample.partial.tt <- function(generator,
 
 
 
-.unified.down.phase <- function(tree, node, result.vector, info, us.count, height.limits, bridge, verbose = F){
+.unified.down.phase <- function(tree, node, result.vector, info, us.count, height.limits, bridge, verbose = FALSE){
   
   if(verbose) cat("At node",node,"with",us.count,"remaining unsampled regions\n")
   kids <- phangorn::Children(tree, node)
@@ -382,7 +382,7 @@ sample.partial.tt <- function(generator,
       result <- current.host.count + 1
       current.host.count <<- result
     }
-    creep <- F
+    creep <- FALSE
     
     result.vector[node] <- result
     
@@ -394,7 +394,7 @@ sample.partial.tt <- function(generator,
     if(parent.choice %in% bridge[desc.tips]){
       result <- parent.choice
       result.vector[node] <- result
-      creep <- F
+      creep <- FALSE
     } else {
       
       parent.unsampled <- parent.choice > sampled.host.count
@@ -426,10 +426,10 @@ sample.partial.tt <- function(generator,
       }
       
       
-      creep <- F
+      creep <- FALSE
       
       if(result == sampled.host.count + 2){
-        creep <- T
+        creep <- TRUE
         #whatever the parent has
         result <- parent.choice
       } else if(result == sampled.host.count + 1){
