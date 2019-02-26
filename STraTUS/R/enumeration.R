@@ -55,7 +55,7 @@ tt.generator <- function(tree,
                          max.sampling.to.noninfectious = Inf,
                          minimum.heights = NULL,
                          maximum.heights = NULL,
-                         tip.map = 1:length(tree$tip.label),
+                         tip.map = tree$tip.label,
                          bigz = F){
   
   if(max.infection.to.sampling < Inf & !is.null(maximum.heights)){
@@ -68,7 +68,7 @@ tt.generator <- function(tree,
     warning(paste0("Using the specified minimum heights vector; ignoring the specified value of max.sampling.to.noninfectious (",max.sampling.to.noninfectious,")"))
   }
   
-  host.nos <- unique(tip.map)
+  host.nos <- 1:length(unique(tip.map))
   
   has.heights <- max.infection.to.sampling<Inf | max.sampling.to.noninfectious<Inf | !is.null(minimum.heights) | !is.null(maximum.heights)
   
@@ -104,31 +104,22 @@ tt.generator <- function(tree,
     height.limits <- cbind(rep(-Inf, length(host.nos)+1), rep(Inf, length(host.nos)+1))
   }
   
+  numerical.tip.map <- map_int(tip.map, function(x){
+    which(unique(tip.map) == x)
+  })
+  
   bridge <- tryCatch(
-    .build.bridge(tree, host.nos, tip.map),
+    .build.bridge(tree, host.nos, numerical.tip.map),
     error=function(cond){
       stop("No transmission trees (without superinfection) are compatible with this set of tip labels")
     }
   )
   
-  
-  if(length(tree$tip.label)==length(host.nos)){
-    hosts <- tree$tip.label
-  } else {
-    # you can do better than this _really_...
-    
-    hosts <- vector()
-    
-    for(i in 1:length(host.nos)){
-      hosts[i] <- paste(tree$tip.label[which(tip.map==i)], collapse="-")
-    }
-    
-  }
+  hosts <- tip.map
   
   if(max.unsampled > 0){
     hosts <- c(tree$tip.label, paste("uh", 1:max.unsampled, sep=""))
   }
-  
   
   results <- .unified.up.phase(tree, phangorn::getRoot(tree), list(), max.unsampled, height.limits, bridge, bigz)
   
@@ -149,222 +140,7 @@ tt.generator <- function(tree,
   
   return(out)
 }
-# 
-# .up.phase <- function(tree, node, node.calculations, max.unsampled){
-#   if(is.tip(tree, node)){
-#     
-#     node.info <- list()
-#     
-#     # Rows are hosts except the last row is "unsampled". 
-#     # Columns are the number of unsampled partition elements in the tree, shifted by 1 because zero is a thing
-#     
-#     v <- matrix(0, nrow = length(tree$tip.label) + 1, ncol = max.unsampled + 1)
-#     v[node, 1] <- 1
-#     
-#     node.info$v <- v
-#     node.info$p <- c(1, rep(0, max.unsampled))
-#     node.info$pstar <- c(1, rep(0, max.unsampled))
-#     if(ncol(v)>1){
-#       node.info$ps <- colSums(v[1:length(tree$tip.label),])
-#     } else {
-#       node.info$ps <- sum(v)
-#     }
-#     node.info$pu <- v[length(tree$tip.label) + 1,]
-#     
-#     node.calculations[[node]] <- node.info
-#     
-#   } else {
-#     for(child in phangorn::Children(tree, node)){
-#       node.calculations <- .up.phase(tree, child, node.calculations, max.unsampled)
-#     }
-#     
-#     node.info <- list()
-#     
-#     v <- matrix(0, nrow = length(tree$tip.label) + 1, ncol = max.unsampled + 1)
-#     
-#     # the row for the unsampled state
-#     
-#     v[length(tree$tip.label) + 1, ] <- sapply(0:max.unsampled, function(x){
-#       if(x==0){
-#         return(0)
-#       } else {
-#         # how many unsampled elements
-#         
-#         # how many that are not the root unsampled element
-#         remaining.us.elements <- x - 1
-#         out <- 0
-#         for(i in 0:remaining.us.elements){
-#           j = remaining.us.elements - i
-#           kids <- phangorn::Children(tree,node)
-#           
-#           term <- node.calculations[[kids[1]]]$pstar[i+1] * node.calculations[[kids[2]]]$pstar[j+1]
-#           out <- out + term
-#         }
-#         return(out)
-#       }
-#     } )
-#     
-#     node.info$pu <- v[length(tree$tip.label) + 1,]
-#     
-#     # the rest of the rows
-#     kids <- phangorn::Children(tree,node)
-#     
-#     for(host in 1:length(tree$tip.label)){
-#       temp <- sapply(0:max.unsampled, function(x){
-#         out <- 0
-#         for(i in 0:x){
-#           j = x - i
-#           term <- node.calculations[[kids[1]]]$v[host,i+1] * node.calculations[[kids[2]]]$pstar[j+1] +
-#             node.calculations[[kids[2]]]$v[host,i+1] * node.calculations[[kids[1]]]$pstar[j+1]
-#           out <- out + term
-#         }
-#         return(out)
-#       })
-#       v[host,] <- temp
-#     }
-#     
-#     if(ncol(v)>1){
-#       node.info$ps <- colSums(v[1:length(tree$tip.label),])
-#     } else {
-#       node.info$ps <- sum(v)
-#     }
-#     
-#     node.info$p <- node.info$pu + node.info$ps
-#     
-#     node.info$pstar <- sapply(0:max.unsampled, function(x) {
-#       out <- node.info$p[x+1]
-#       for(i in 0:x){
-#         j = x - i
-#         
-#         term <- node.calculations[[kids[1]]]$pstar[i+1] * node.calculations[[kids[2]]]$pstar[j+1]
-#         out <- out + term
-#       }
-#       return(out)
-#     })
-#     
-#     node.info$v <- v
-#     node.calculations[[node]] <- node.info
-#   }
-#   return(node.calculations)
-# }
-# 
-# .height.aware.up.phase <- function(tree, node, node.calculations, height.limits){
-#   if(is.tip(tree, node)){
-#     
-#     if(get.node.height(tree, node) < height.limits[node,1] | get.node.height(tree, node) > height.limits[node,2]){
-#       stop("Bad node height limits for node ",node, sep="")
-#     }
-#     
-#     node.info <- list()
-#     
-#     v <- rep(0, length(tree$tip.label))
-#     v[node] <- 1
-#     
-#     node.info$v <- v
-#     node.info$p <- 1
-#     node.info$pstar <- rep(1, length(tree$tip.label))
-#     node.calculations[[node]] <- node.info
-#     
-#   } else {
-#     for(child in phangorn::Children(tree, node)){
-#       node.calculations <- .height.aware.up.phase(tree, child, node.calculations, height.limits)
-#     }
-#     
-#     node.info <- list()
-#     
-#     v <- rep(0, length(tree$tip.label))
-#     pstarprod <- rep(1, length(tree$tip.label))
-#     
-#     kids <- phangorn::Children(tree,node)
-#     
-#     for(kid in kids){
-#       desc.tips <- unlist(phangorn::Descendants(tree, kid, type="tips"))
-#       v[desc.tips] <- node.calculations[[kid]]$v[desc.tips]
-#       
-#       for(kid2 in kids){
-#         if(kid != kid2){
-#           v[desc.tips] <- v[desc.tips]*node.calculations[[kid2]]$pstar[desc.tips]
-#         }
-#       }
-#       pstarprod <- pstarprod*node.calculations[[kid]]$pstar
-#     }
-#     
-#     height <- get.node.height(tree, node)
-#     
-#     # replace v for those out of range with 0
-#     
-#     v[which(height.limits[,1] > height | height.limits[,2] < height )] <- 0
-#     
-#     node.info$v <- v
-#     node.info$p <- sum(v)
-#     node.info$pstar <- rep(node.info$p, length(tree$tip.label))
-#     tips.lower <- which(height.limits[,1] <= get.node.height(tree,node))
-#     
-#     node.info$pstar[tips.lower] <- node.info$pstar[tips.lower] + pstarprod[tips.lower]
-#     node.calculations[[node]] <- node.info
-#   }
-#   return(node.calculations)
-# }
-# 
-# .multiply.sampled.up.phase <- function(tree, node, node.calculations, bridge){
-#   if(is.tip(tree, node)){
-#     
-#     node.info <- list()
-#     
-#     v <- rep(0, length(unique(stats::na.omit(bridge))))
-#     v[bridge[node]] <- 1
-#     
-#     node.info$v <- v
-#     node.info$p <- 1
-#     node.info$pstar <- 1
-#     node.calculations[[node]] <- node.info
-#     
-#   } else {
-#     for(child in phangorn::Children(tree, node)){
-#       node.calculations <- .multiply.sampled.up.phase(tree, child, node.calculations, bridge)
-#     }
-#     
-#     node.info <- list()
-#     
-#     v <- rep(0, length(unique(stats::na.omit(bridge))))
-#     pstarprod <- 1
-#     
-#     kids <- phangorn::Children(tree,node)
-#     
-#     desc.tips.1 <- unlist(phangorn::Descendants(tree, kids[1], type="tips"))
-#     desc.tips.2 <- unlist(phangorn::Descendants(tree, kids[2], type="tips"))
-#     if(length(intersect(bridge[desc.tips.1], bridge[desc.tips.2]))==1){
-#       # this is the situation where this is the top of a bridge
-#       
-#       only.valid.host <- intersect(bridge[desc.tips.1], bridge[desc.tips.2])
-#       
-#       v[only.valid.host] <- node.calculations[[kids[1]]]$v[only.valid.host] * node.calculations[[kids[2]]]$v[only.valid.host]
-#       
-#     } else {
-#       for(host.no in 1:max(stats::na.omit(bridge))){
-#         if(!is.na(bridge[node]) & bridge[node] != host.no){
-#           v[host.no] <- 0
-#         } else if(host.no %in% bridge[desc.tips.1]){
-#           v[host.no] <- node.calculations[[kids[1]]]$v[host.no] * node.calculations[[kids[2]]]$pstar
-#         } else if(host.no %in% bridge[desc.tips.2]) {
-#           v[host.no] <- node.calculations[[kids[2]]]$v[host.no] * node.calculations[[kids[1]]]$pstar
-#         }
-#       }
-#     }
-#     
-#     if(is.na(bridge[node])){
-#       pstar <- sum(v) + node.calculations[[kids[1]]]$pstar * node.calculations[[kids[2]]]$pstar
-#     } else {
-#       pstar <- sum(v)
-#     }
-#     
-#     node.info$v <- v
-#     node.info$p <- sum(v)
-#     node.info$pstar <- pstar
-#     node.calculations[[node]] <- node.info
-#   }
-#   return(node.calculations)
-# }
+
 
 # height.limits must have an extra (-Inf, Inf) for the unsampled state
 

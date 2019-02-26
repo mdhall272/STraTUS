@@ -18,6 +18,19 @@
 #' @export sample.tt
 #' @import ggtree phangorn gmp RcppAlgos
 #' @importFrom igraph graph_from_edgelist
+#' @examples
+#' # draw one sample from the uniform distribution
+#' generator <- tt.generator(stratus.example.tree)
+#' samples <- sample.tt(generator, 1, draw = T)
+#' samples[[1]]
+#' # with unsampled.hosts
+#' generator.us <- tt.generator(stratus.example.tree, max.unsampled = 2)
+#' # note that you can ask for less unsampled hosts than the generator has (but not more)
+#' samples.1us <- sample.tt(generator.us, 1, unsampled = 1,  draw = T)
+#' samples.1us[[1]]
+#' # with multiply sampled hosts
+#' generator.ms <- tt.generator(stratus.example.tree, tip.map = grouping.map)
+#' samples.ms <- sample.tt(generator.ms, 1, draw = T)
 
 
 sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igraph = F, verbose = F){

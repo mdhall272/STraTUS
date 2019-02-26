@@ -147,7 +147,7 @@ draw.fully.sampled <- function(generator, sample){
   picture
 }
 
-#' For a sample with unsampled hosts, draw the annotated phylogeny using \code{ggtree}
+#' For a sample with or without unsampled hosts, draw the annotated phylogeny using \code{ggtree}
 #'
 #' @param generator A list of class \code{tt.generator} produced by \code{tt.generator}.
 #' @param sample A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}
@@ -186,12 +186,15 @@ draw.incompletely.sampled <- function(generator, sample){
   adjustments[phangorn::getRoot(tree)] <- 1.5
   
   attr(tree, "node.annots") <- node.annots
+  attr(tree, "verbose.tip.labels") <- c(map_chr(1:length(tree$tip.label), function(x){
+    paste0(tree$tip.label[x], " (",node.annots[x], ")")
+  }), rep(NA, tree$Nnode))
   attr(tree, "branch.colour.annots") <- branch.colour.annots
   attr(tree, "branch.annots") <- branch.annots
   attr(tree, "adjustments") <- adjustments
   
   picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
-    geom_tiplab(aes(col=node.annots), hjust=-1) +
+    geom_tiplab(aes(col=node.annots, label = verbose.tip.labels), hjust=-0.1) +
     geom_point(aes(col=node.annots), size=4) +
     scale_fill_hue(na.value = "grey") +
     scale_color_hue(na.value = "grey") +
