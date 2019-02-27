@@ -1,5 +1,5 @@
 Package: STraTUS
-Title: Enumeration and Uniform Sampling of Transmission Trees for a Known Phlyogeny
+Title: Enumeration and Uniform Sampling of Transmission Trees for a Known Phylogeny
 Version: 1.1
 Authors@R: c(person("Matthew", "Hall", email = "matthew.hall@bdi.ox.ac.uk", role = c("aut", "cre")), person("Caroline", "Colijn", role = c("ctb")))
 Author: Matthew Hall [aut, cre], Caroline Colijn [ctb]
