@@ -59,6 +59,7 @@ sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igra
 #' @export sample.partial.tt
 #' @import ggtree phangorn 
 #' @importFrom igraph graph_from_edgelist
+#' @importFrom stats runif
 
 sample.partial.tt <- function(generator, 
                               count = 1, 
