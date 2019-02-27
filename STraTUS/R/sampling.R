@@ -159,8 +159,6 @@ sample.partial.tt <- function(generator,
     if(unsampled > 0){
       unsampled.nos <- seq(sampled.host.count + 1, sampled.host.count + unsampled)
       
-      
-      
       # We leave alone everything not involving the subtree rooted at starting.node.
       # Hidden hosts on the root branch of that ARE resampled (they have to be, because it may not end up an infection branch)
       # Existing unsampled hosts exist outside the subtree but can also exist inside it (if they creep down)
@@ -267,13 +265,15 @@ sample.partial.tt <- function(generator,
     out <- list()
     class(out) <- append(class(out), "tt")
     
-    current.host.count <<- starting.current.host.count
+    current.host.count <- starting.current.host.count
     
     no.visible <- sample(0:remaining.unsampled.hosts, 1, prob = as.numeric(visible.count.weights))
     
     no.hidden <- remaining.unsampled.hosts - no.visible
     
-    a.sample <- .unified.down.phase(tree, starting.node, existing.annot, generator$node.calculations, no.visible, generator$height.limits, generator$bridge, verbose)
+    results <- .unified.down.phase(tree, starting.node, current.host.count, existing.annot, generator$node.calculations, no.visible, generator$height.limits, generator$bridge, verbose)
+    
+    a.sample <- results$result.vector
     
     out$annotations <- a.sample
     
@@ -355,7 +355,7 @@ sample.partial.tt <- function(generator,
 
 
 
-.unified.down.phase <- function(tree, node, result.vector, info, us.count, height.limits, bridge, verbose = FALSE){
+.unified.down.phase <- function(tree, node, current.host.count, result.vector, info, us.count, height.limits, bridge, verbose = FALSE){
   
   if(verbose) cat("At node",node,"with",us.count,"remaining unsampled regions\n")
   kids <- phangorn::Children(tree, node)
@@ -377,11 +377,10 @@ sample.partial.tt <- function(generator,
       result <- sample(1:(sampled.host.count + 1), 1, prob = prob.weights)
     }
     
-    
-    
+  
     if(result == (sampled.host.count + 1)){
       result <- current.host.count + 1
-      current.host.count <<- result
+      current.host.count <- result
     }
     creep <- FALSE
     
@@ -436,7 +435,7 @@ sample.partial.tt <- function(generator,
       } else if(result == sampled.host.count + 1){
         #new unsampled host
         result <- current.host.count + 1
-        current.host.count <<- result
+        current.host.count <- result
       }
       
       result.vector[node] <- result
@@ -449,7 +448,10 @@ sample.partial.tt <- function(generator,
   if(!is.tip(tree, node)){
     if(us.count==0){
       for(child in kids){
-        result.vector <- .unified.down.phase(tree, child, result.vector, info, 0, height.limits, bridge, verbose)
+        results <- .unified.down.phase(tree, child, current.host.count, result.vector, info, 0, height.limits, bridge, verbose)
+        
+        result.vector <- results$result.vector
+        current.host.count <- results$current.host.count
       }
     } else {
       if(creep){
@@ -546,10 +548,13 @@ sample.partial.tt <- function(generator,
       }
       
       for(child.no in 1:length(kids)){
-        result.vector <- .unified.down.phase(tree, kids[child.no], result.vector, info, chosen.col[child.no], height.limits, bridge, verbose)
+        results <- .unified.down.phase(tree, kids[child.no], current.host.count, result.vector, info, chosen.col[child.no], height.limits, bridge, verbose)
+        
+        result.vector <- results$result.vector
+        current.host.count <- results$current.host.count
       }
     }
   }
-  return(result.vector)
+  return(list(result.vector = result.vector, current.host.count = current.host.count))
 }
 

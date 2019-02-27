@@ -193,12 +193,24 @@ draw.incompletely.sampled <- function(generator, sample){
   attr(tree, "branch.annots") <- branch.annots
   attr(tree, "adjustments") <- adjustments
   
-  picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
-    geom_tiplab(aes(col=node.annots, label = verbose.tip.labels), hjust=-0.1) +
-    geom_point(aes(col=node.annots), size=4) +
-    scale_fill_hue(na.value = "grey") +
-    scale_color_hue(na.value = "grey") +
-    geom_text(aes(x=branch, label=branch.annots, hjust=adjustments), vjust=-0.5, col="black", na.rm=TRUE)
+  multisampled <- any(!is.na(generator$bridge[length(tree$tip.label)+1:length(tree$tip.label)+tree$Nnode]))
+  
+  if(multisampled){
+    picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
+      geom_tiplab(aes_string(col='node.annots', label = 'verbose.tip.labels'), hjust=-0.1) +
+      geom_point(aes_string(col='node.annots'), size=4) +
+      scale_fill_hue(na.value = "grey") +
+      scale_color_hue(na.value = "grey") +
+      geom_text(aes_string(x='branch', label='branch.annots', hjust='adjustments'), vjust=-0.5, col="black", na.rm=TRUE)
+  } else {
+    picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
+      geom_tiplab(aes_string(col='node.annots'), hjust=-0.5) +
+      geom_point(aes_string(col='node.annots'), size=4) +
+      scale_fill_hue(na.value = "grey") +
+      scale_color_hue(na.value = "grey") +
+      geom_text(aes_string(x='branch', label='branch.annots', hjust='adjustments'), vjust=-0.5, col="black", na.rm=TRUE)
+  }
+
   
   return(picture)
 }
