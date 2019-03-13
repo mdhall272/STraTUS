@@ -4,10 +4,11 @@ Version: 1.1
 Authors@R: c(person("Matthew", "Hall", email = "matthew.hall@bdi.ox.ac.uk", role = c("aut", "cre")), person("Caroline", "Colijn", role = c("ctb")))
 Author: Matthew Hall [aut, cre], Caroline Colijn [ctb]
 Maintainer: Matthew Hall <matthew.hall@bdi.ox.ac.uk>
-Description: For a single, known pathogen phylogeny, the functions here enumerate and uniformly sample from the set of compatible transmission trees. A complete transmission bottleneck and no superinfection or reinfection are assumed; complete and single sampling are not.
+Description: For a single, known pathogen phylogeny, provides functions for enumeration of the set of compatible epidemic transmission trees, and for uniform sampling from that set. Optional arguments allow for incomplete sampling with a known number of missing individuals, multiple sampling, and known infection time limits. Always assumed are a complete transmission bottleneck and no superinfection or reinfection. See Hall and Colijn <doi:10.1101/160812> for methodology.
 Depends: R (>= 3.4)
-Imports: ape, phangorn, igraph, gmp, gtools, ggplot2, ggtree, RcppAlgos, stats
+Imports: ape, phangorn, igraph, gmp, gtools, ggplot2, ggtree (>= 1.14.6), RcppAlgos, stats
 License: GPL
+URL: http://github.com/mdhall272/STraTUS/
 Encoding: UTF-8
 RoxygenNote: 6.1.1
 LazyData: TRUE
