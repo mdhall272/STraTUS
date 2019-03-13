@@ -47,5 +47,5 @@ generator <- tt.generator(stratus.example.tree)
 samples <- sample.tt(generator, 1, draw = TRUE)
 original.tt <- samples[[1]]
 # sample anew, from node 31 downwards
-revised.tt <- sample.tt(generator, 1, starting.node = 31, existing = original.tt draw = TRUE)
+revised.tt <- sample.partial.tt(generator, 1, starting.node = 31, existing = original.tt, draw = TRUE)
 }
