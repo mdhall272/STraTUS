@@ -41,3 +41,11 @@ A list, each of whose elements is a list of class \code{tt} with one or more of 
 \description{
 Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed
 }
+\examples{
+# draw one sample from the uniform distribution
+generator <- tt.generator(stratus.example.tree)
+samples <- sample.tt(generator, 1, draw = TRUE)
+original.tt <- samples[[1]]
+# sample anew, from node 31 downwards
+revised.tt <- sample.tt(generator, 1, starting.node = 31, existing = original.tt draw = TRUE)
+}

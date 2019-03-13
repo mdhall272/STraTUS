@@ -41,8 +41,10 @@ get.node.height <- function(tree, node){
 #' @param sample A list of class \code{tt} produced by \code{sample.tt} or \code{sample.partial.tt}
 #' @return An \code{igraph} object
 #' @export build.edgelist
-
-
+#' @examples
+#' generator <- tt.generator(stratus.example.tree)
+#' samples <- sample.tt(generator, 1)
+#' build.edgelist(generator, samples[[1]])
 build.edgelist <- function(generator, sample){
   
   tree <- generator$tree
@@ -111,10 +113,15 @@ build.edgelist <- function(generator, sample){
 #' @export draw.fully.sampled
 #' @import ggtree
 #' @import ggplot2
+#' @examples
+#' generator <- tt.generator(stratus.example.tree)
+#' samples <- sample.tt(generator, 1)
+#' draw.fully.sampled(generator, samples[[1]])
+
 
 draw.fully.sampled <- function(generator, sample){
   
-  if(generator$type=="unsampled"){
+  if(any(sample$hidden > 0)) {
     stop("This generator uses unsampled hosts.")
   }
   
@@ -155,6 +162,15 @@ draw.fully.sampled <- function(generator, sample){
 #' @export draw.incompletely.sampled
 #' @import ggtree
 #' @import ggplot2
+#' @examples
+#' generator <- tt.generator(stratus.example.tree, max.unsampled = 2)
+#' samples <- sample.tt(generator, 1, unsampled=2)
+#' # Tree is annotated with the number of unsampled hosts along each branch
+#' draw.incompletely.sampled(generator, samples[[1]])
+#' # This still works if there are no unsampled hosts
+#' samples <- sample.tt(generator, 1)
+#' draw.incompletely.sampled(generator, samples[[1]])
+
 
 draw.incompletely.sampled <- function(generator, sample){
   

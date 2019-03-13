@@ -60,6 +60,13 @@ sample.tt <- function(generator, count = 1, unsampled = 0, draw = count==1, igra
 #' @import ggtree phangorn 
 #' @importFrom igraph graph_from_edgelist
 #' @importFrom stats runif
+#' @examples
+#' # draw one sample from the uniform distribution
+#' generator <- tt.generator(stratus.example.tree)
+#' samples <- sample.tt(generator, 1, draw = TRUE)
+#' original.tt <- samples[[1]]
+#' # sample anew, from node 31 downwards
+#' revised.tt <- sample.tt(generator, 1, starting.node = 31, existing = original.tt draw = TRUE)
 
 sample.partial.tt <- function(generator, 
                               count = 1, 
@@ -155,6 +162,8 @@ sample.partial.tt <- function(generator,
     subtree.nodes <- c(starting.node, unlist(phangorn::Descendants(tree, starting.node, type="all")))
     other.nodes <- setdiff(1:node.count(tree), subtree.nodes)
     
+    unsampled.nos.outside.subtree <- vector()
+    
     # these are all the unsampled hosts in the entire tree
     if(unsampled > 0){
       unsampled.nos <- seq(sampled.host.count + 1, sampled.host.count + unsampled)
@@ -190,7 +199,7 @@ sample.partial.tt <- function(generator,
     # Unpleasant as this seems, it is probably easiest to renumber the existing hosts.
     
     existing.annot <- lapply(existing.annot, function(x){
-      if(x %in% unsampled.nos.outside.subtree){
+      if(unsampled > 0 & x %in% unsampled.nos.outside.subtree){
         sampled.host.count + which(unsampled.nos.outside.subtree == x)
       } else {
         x

@@ -17,3 +17,8 @@ An \code{igraph} object
 \description{
 For a sample, produce the transmission tree as a \code{igraph} object
 }
+\examples{
+generator <- tt.generator(stratus.example.tree)
+samples <- sample.tt(generator, 1)
+build.edgelist(generator, samples[[1]])
+}

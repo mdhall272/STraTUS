@@ -17,3 +17,8 @@ A \code{ggtree} object
 \description{
 For a sample with no unsampled hosts, draw the annotated phylogeny using \code{ggtree}
 }
+\examples{
+generator <- tt.generator(stratus.example.tree)
+samples <- sample.tt(generator, 1)
+draw.fully.sampled(generator, samples[[1]])
+}

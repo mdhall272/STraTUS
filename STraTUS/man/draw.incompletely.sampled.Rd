@@ -17,3 +17,12 @@ A \code{ggtree} object
 \description{
 For a sample with or without unsampled hosts, draw the annotated phylogeny using \code{ggtree}
 }
+\examples{
+generator <- tt.generator(stratus.example.tree, max.unsampled = 2)
+samples <- sample.tt(generator, 1, unsampled=2)
+# Tree is annotated with the number of unsampled hosts along each branch
+draw.incompletely.sampled(generator, samples[[1]])
+# This still works if there are no unsampled hosts
+samples <- sample.tt(generator, 1)
+draw.incompletely.sampled(generator, samples[[1]])
+}
