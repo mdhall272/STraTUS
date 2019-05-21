@@ -486,11 +486,9 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])){
-          warning(paste0("Encountered miscalculation 1; error is ", 
-                         (abs(sum(column.weights) - (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])))/
-                           (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1]), ". This probably means that R has encountered an
-                         integer too large for it to reliably handle. This is unlikely to significantly affect results if the error is small. To avoid it entirely 
-                         at the cost of considerable slowdown, use the --bigz option to tt.generator.\n"))
+          warning(paste0("Encountered miscalculation 1; error = ", 
+                         signif((abs(sum(column.weights) - (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1])))/
+                           (info[[node]]$pstar[what.comes.down, us.count + 1] - info[[node]]$p[us.count + 1]), 3), ". This probably means that R has encountered an integer too large for it to reliably handle. This is unlikely to significantly affect results if the error is small. To avoid it entirely at the cost of considerable slowdown, use the --bigz option to tt.generator.\n"))
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -512,10 +510,8 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != info[[node]]$pu[us.count + 1] ){
-          warning(paste0("Encountered miscalculation 2; error is ", 
-                         (abs(sum(column.weights) - info[[node]]$pu[us.count + 1]))/info[[node]]$pu[us.count + 1], ". This probably means that R has encountered an
-                         integer too large for it to reliably handle. This is unlikely to significantly affect results if the error is small. To avoid it entirely 
-                         at the cost of considerable slowdown, use the --bigz option to tt.generator.\n"))
+          warning(paste0("Encountered miscalculation 2; error = ", 
+                         signif((abs(sum(column.weights) - info[[node]]$pu[us.count + 1]))/info[[node]]$pu[us.count + 1], 3), ". This probably means that R has encountered an integer too large for it to reliably handle. This is unlikely to significantly affect results if the error is small. To avoid it entirely at the cost of considerable slowdown, use the --bigz option to tt.generator.\n"))
         }
         
         chosen.col <- distribution.of.us[,sample(1:ncol(distribution.of.us), 1, prob=as.numeric(column.weights))]
@@ -542,10 +538,8 @@ sample.partial.tt <- function(generator,
         column.weights <- do.call(c, column.weights)
         
         if(sum(column.weights) != info[[node]]$v[result, us.count + 1])  {
-          warning(paste0("Encountered miscalculation 3; error is ", 
-                         (abs(sum(column.weights) - info[[node]]$v[result, us.count + 1]))/info[[node]]$v[result, us.count + 1], ". This probably means that R has encountered an
-                         integer too large for it to reliably handle. This is unlikely to significantly affect results if the error is small. To avoid it entirely 
-                         at the cost of considerable slowdown, use the --bigz option to tt.generator.\n"))
+          warning(paste0("Encountered miscalculation 3; error = ", 
+                         signif((abs(sum(column.weights) - info[[node]]$v[result, us.count + 1]))/info[[node]]$v[result, us.count + 1], 3), ". This probably means that R has encountered an integer too large for it to reliably handle. This is unlikely to significantly affect results if the error is small. To avoid it entirely at the cost of considerable slowdown, use the --bigz option to tt.generator.\n"))
         }
         
         
