@@ -270,7 +270,7 @@ sample.partial.tt <- function(generator,
   
   results <- list()
   
-  for(i in 1:count){
+  results <- lapply(1:count, function(i){
     if(verbose) cat("Sample ",i,"\n", sep="")
     out <- list()
     class(out) <- append(class(out), "tt")
@@ -357,9 +357,9 @@ sample.partial.tt <- function(generator,
       out$igraph <- graph_from_edgelist(out$edgelist)
     }
     
-    results[[i]] <- out
+    out
     
-  }
+  })
   return(results)
 }
 
