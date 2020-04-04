@@ -4,10 +4,17 @@
 \alias{sample.partial.tt}
 \title{Resample the subtree rooted at any tree node, keeping the annotations for the rest of the tree fixed}
 \usage{
-sample.partial.tt(generator, count = 1, unsampled = 0,
-  starting.node = phangorn::getRoot(generator$tree), existing = NULL,
-  check.integrity = TRUE, draw = count == 1, igraph = FALSE,
-  verbose = FALSE)
+sample.partial.tt(
+  generator,
+  count = 1,
+  unsampled = 0,
+  starting.node = phangorn::getRoot(generator$tree),
+  existing = NULL,
+  check.integrity = TRUE,
+  draw = count == 1,
+  igraph = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}

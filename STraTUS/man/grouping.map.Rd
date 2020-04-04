@@ -4,7 +4,9 @@
 \name{grouping.map}
 \alias{grouping.map}
 \title{A vector assigning the tips of \code{stratus.example.tree} to groups (in the order they appear in \code{stratus.example.tree$tip.label}), as an example of multiple sampling.}
-\format{A character vector of length 20}
+\format{
+A character vector of length 20
+}
 \description{
 A vector assigning the tips of \code{stratus.example.tree} to groups (in the order they appear in \code{stratus.example.tree$tip.label}), as an example of multiple sampling.
 }

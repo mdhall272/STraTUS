@@ -4,7 +4,9 @@
 \name{stratus.example.tree}
 \alias{stratus.example.tree}
 \title{An unexceptional phylogeny generated with \code{rtree} from \code{ape}}
-\format{A phylogenetic tree (\code{phylo} format) with 20 tips and 19 internal nodes}
+\format{
+A phylogenetic tree (\code{phylo} format) with 20 tips and 19 internal nodes
+}
 \description{
 An unexceptional phylogeny generated with \code{rtree} from \code{ape}
 }

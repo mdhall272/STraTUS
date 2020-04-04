@@ -4,9 +4,16 @@
 \alias{tt.generator}
 \title{Enumerate transmission trees for the given pathogen phylogeny, and provide a uniform sample generator}
 \usage{
-tt.generator(tree, max.unsampled = 0, max.infection.to.sampling = Inf,
-  max.sampling.to.noninfectious = Inf, minimum.heights = NULL,
-  maximum.heights = NULL, tip.map = tree$tip.label, bigz = FALSE)
+tt.generator(
+  tree,
+  max.unsampled = 0,
+  max.infection.to.sampling = Inf,
+  max.sampling.to.noninfectious = Inf,
+  minimum.heights = NULL,
+  maximum.heights = NULL,
+  tip.map = tree$tip.label,
+  bigz = FALSE
+)
 }
 \arguments{
 \item{tree}{A \code{phylo} object}

@@ -10,5 +10,5 @@ Imports: ape, phangorn, igraph, gmp, ggplot2, ggtree (>= 1.14.6), RcppAlgos, sta
 License: GPL
 URL: http://github.com/mdhall272/STraTUS/
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 LazyData: TRUE

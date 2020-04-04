@@ -4,8 +4,14 @@
 \alias{sample.tt}
 \title{Sample one or more transmission trees uniformly}
 \usage{
-sample.tt(generator, count = 1, unsampled = 0, draw = count == 1,
-  igraph = FALSE, verbose = FALSE)
+sample.tt(
+  generator,
+  count = 1,
+  unsampled = 0,
+  draw = count == 1,
+  igraph = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{generator}{A list of class \code{tt.generator} produced by \code{tt.generator}.}
