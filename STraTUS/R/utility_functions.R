@@ -148,8 +148,8 @@ draw.fully.sampled <- function(generator, sample){
   picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
     geom_tiplab(aes(col=annots), hjust=-1) +
     geom_point(aes(col=annots), size=4) +
-    scale_fill_hue(na.value = "grey") +
-    scale_color_hue(na.value = "grey")
+    scale_fill_hue(na.value = "grey", guide = F) +
+    scale_color_hue(na.value = "grey", guide = F)
   
   picture
 }
@@ -210,15 +210,15 @@ draw.incompletely.sampled <- function(generator, sample){
     picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
       geom_tiplab(aes_string(col='node.annots', label = 'verbose.tip.labels'), hjust=-0.1) +
       geom_point(aes_string(col='node.annots'), size=4) +
-      scale_fill_hue(na.value = "grey") +
-      scale_color_hue(na.value = "grey") +
+      scale_fill_hue(na.value = "grey", guide = F) +
+      scale_color_hue(na.value = "grey", guide = F) +
       geom_text(aes_string(x='branch', label='branch.annots', hjust='adjustments'), vjust=-0.5, col="black", na.rm=TRUE)
   } else {
     picture <- ggtree(tree, aes(col=branch.colour.annots), size=1.5) +
       geom_tiplab(aes_string(col='node.annots'), hjust=-0.5) +
       geom_point(aes_string(col='node.annots'), size=4) +
-      scale_fill_hue(na.value = "grey") +
-      scale_color_hue(na.value = "grey") +
+      scale_fill_hue(na.value = "grey", guide = F) +
+      scale_color_hue(na.value = "grey", guide = F) +
       geom_text(aes_string(x='branch', label='branch.annots', hjust='adjustments'), vjust=-0.5, col="black", na.rm=TRUE)
   }
 
